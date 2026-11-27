@@ -1,0 +1,4636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock & GT3 Brasil Manager - v1.1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0e14;
+      --bg-panel: #131824;
+      --bg-card: #1b2232;
+      --bg-card-hover: #242e44;
+      --border-pixel: #334155;
+      --border-gold: #f59e0b;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-yellow: #eab308;
+      --accent-purple: #a855f7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-pixel: 'Press Start 2P', monospace;
+      --font-ui: 'Inter', system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b0e14 70%);
+    }
+
+    .pixel-font {
+      font-family: var(--font-pixel);
+      line-height: 1.5;
+    }
+
+    /* Botões estilo 16-bit */
+    .btn {
+      font-family: var(--font-pixel);
+      font-size: 0.72rem;
+      padding: 12px 18px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.45), 0 3px 0 #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #fff;
+      background: #334155;
+    }
+
+    .btn:hover:not(:disabled) {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #22c55e, #15803d);
+      border-color: #86efac;
+    }
+
+    .btn-gold {
+      background: linear-gradient(180deg, #f59e0b, #b45309);
+      border-color: #fde68a;
+      color: #111;
+      font-weight: 800;
+    }
+
+    .btn-blue {
+      background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+      border-color: #93c5fd;
+    }
+
+    .btn-danger {
+      background: linear-gradient(180deg, #ef4444, #b91c1c);
+      border-color: #fca5a5;
+    }
+
+    .btn-sm {
+      font-size: 0.62rem;
+      padding: 8px 12px;
+    }
+
+    .btn-xs {
+      font-family: var(--font-ui);
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 6px 10px;
+      box-shadow: none;
+      border: 1px solid #475569;
+    }
+
+    /* Painéis e Cards */
+    .panel {
+      background: var(--bg-panel);
+      border: 2px solid var(--border-pixel);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-gold {
+      border-color: var(--border-gold);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 2px solid #2e3a52;
+      border-radius: 6px;
+      padding: 14px;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .card.selectable {
+      cursor: pointer;
+    }
+
+    .card.selectable:hover {
+      border-color: #64748b;
+      background: var(--bg-card-hover);
+    }
+
+    .card.selected {
+      border-color: var(--border-gold);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+      background: #232b3e;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* =========================================================
+       TELA 1: CAPA / MENU INICIAL (COM VÍDEO DE ABERTURA)
+    ========================================================= */
+    #screen-title {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 36px 20px 56px;
+      overflow: hidden;
+      background: #070b14;
+      cursor: pointer;
+    }
+
+    #cover-bg-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: #070b14;
+    }
+
+    #cover-video-player {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #070b14;
+    }
+
+    #cover-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      display: none;
+    }
+
+    #cover-custom-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      display: none;
+    }
+
+    .cover-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: radial-gradient(circle at center, rgba(7, 11, 20, 0.08) 35%, rgba(7, 11, 20, 0.62) 100%);
+      pointer-events: none;
+    }
+
+    .cover-topbar-tools {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      cursor: default;
+    }
+
+    .title-logo-box {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      margin-top: 12px;
+      padding: 18px 28px;
+      background: rgba(11, 14, 20, 0.78);
+      border: 2px solid rgba(245, 158, 11, 0.65);
+      border-radius: 10px;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+      max-width: 820px;
+      width: 100%;
+      opacity: 0;
+      transform: translateY(-20px) scale(0.96);
+      pointer-events: none;
+      cursor: default;
+      transition: opacity 0.65s ease-out, transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .title-logo-box.intro-revealed {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .title-main {
+      font-family: var(--font-pixel);
+      font-size: clamp(1.25rem, 3.3vw, 2.3rem);
+      color: #fbbf24;
+      text-shadow: 0 4px 0 #78350f, 0 8px 18px rgba(0, 0, 0, 0.95);
+      letter-spacing: 2px;
+      line-height: 1.35;
+    }
+
+    .title-sub {
+      font-family: var(--font-pixel);
+      font-size: clamp(0.6rem, 1.3vw, 0.82rem);
+      color: #f8fafc;
+      margin-top: 12px;
+      text-shadow: 0 2px 4px #000;
+      letter-spacing: 1px;
+    }
+
+    .title-menu-stack {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 10px;
+      opacity: 0;
+      transform: translateY(22px);
+      pointer-events: none;
+      cursor: default;
+      transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .title-menu-stack.intro-revealed {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .title-menu-btn {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 0.82rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid #94a3b8;
+      backdrop-filter: blur(4px);
+    }
+
+    .title-menu-btn.continue-btn {
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.95), rgba(21, 128, 61, 0.95));
+      border-color: #86efac;
+      color: #fff;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 16px;
+    }
+
+    .title-menu-btn.start-btn {
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.95), rgba(180, 83, 9, 0.95));
+      border-color: #fde68a;
+      color: #0f172a;
+    }
+
+    /* =========================================================
+       CALCULADORA TÁTICA RETRÁTIL (GLOBAL EM TODAS AS TELAS)
+    ========================================================= */
+    .calc-widget-container {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      z-index: 110;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .calc-panel {
+      width: 248px;
+      background: #131824;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.88);
+    }
+
+    .calc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #334155;
+    }
+
+    .calc-display-box {
+      background: #080b12;
+      border: 2px solid #334155;
+      border-radius: 6px;
+      padding: 8px 10px;
+      text-align: right;
+      margin-bottom: 10px;
+      font-family: monospace;
+    }
+
+    .calc-expr-line {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      min-height: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calc-main-line {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #4ade80;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .calc-keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .calc-key {
+      font-family: var(--font-ui);
+      font-weight: 800;
+      font-size: 0.92rem;
+      padding: 9px 0;
+      border-radius: 5px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #f8fafc;
+      cursor: pointer;
+      transition: background 0.1s, transform 0.08s;
+    }
+
+    .calc-key:hover {
+      background: #2b3a52;
+    }
+
+    .calc-key:active {
+      transform: translateY(1px);
+    }
+
+    .calc-key.op {
+      background: #0f294a;
+      border-color: #3b82f6;
+      color: #60a5fa;
+    }
+
+    .calc-key.clear {
+      background: #3f151b;
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    .calc-key.eq {
+      background: linear-gradient(180deg, #f59e0b, #b45309);
+      border-color: #fde68a;
+      color: #0f172a;
+    }
+
+    /* =========================================================
+       TELAS DE PREPARAÇÃO (ESCOLHA DE CARRO & PILOTO)
+    ========================================================= */
+    .setup-wrapper {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 16px 68px;
+    }
+
+    .cars-selection-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .car-select-row {
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      gap: 20px;
+      align-items: stretch;
+      padding: 16px;
+    }
+
+    @media (max-width: 780px) {
+      .car-select-row {
+        grid-template-columns: 1fr;
+      }
+      .prerace-track-split {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    .car-img-slot {
+      position: relative;
+      background: #0b0f19;
+      border: 2px solid #2d3a54;
+      border-radius: 6px;
+      min-height: 195px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .car-img-slot img {
+      width: 100%;
+      height: 100%;
+      max-height: 215px;
+      object-fit: cover;
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    .car-img-fallback {
+      padding: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+    }
+
+    .car-img-filename-tag {
+      font-family: monospace;
+      font-size: 0.78rem;
+      background: #1e293b;
+      color: #fbbf24;
+      border: 1px dashed #64748b;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .car-info-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Tela de Cadastro do Piloto */
+    .driver-setup-top-split {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    .driver-fields-left {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .driver-portrait-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .driver-portrait-frame {
+      width: 196px;
+      height: 196px;
+      background: #cbd5e1;
+      border: 3px solid #64748b;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    .driver-portrait-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    .driver-portrait-fallback {
+      text-align: center;
+      padding: 12px;
+      color: #1e293b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .driver-nav-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 196px;
+      margin-top: 8px;
+    }
+
+    .gender-toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .gender-btn {
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 2px solid #334155;
+      background: #0f172a;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .gender-btn.active {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.2);
+      color: #f8fafc;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #e2e8f0;
+      font-size: 0.92rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: var(--font-ui);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--border-gold);
+    }
+
+    /* =========================================================
+       HUD SUPERIOR DO JOGO PRINCIPAL
+    ========================================================= */
+    #top-hud {
+      background: #0f131d;
+      border-bottom: 2px solid #293548;
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .hud-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hud-pill {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 14px 20px 0;
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .nav-tab {
+      font-family: var(--font-pixel);
+      font-size: 0.66rem;
+      padding: 11px 15px;
+      background: #161d2b;
+      border: 2px solid #2b364c;
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .nav-tab.active {
+      background: var(--bg-panel);
+      border-color: var(--border-gold);
+      color: #fbbf24;
+    }
+
+    .main-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 20px 72px;
+    }
+
+    /* =========================================================
+       GARAGEM (3 QUADRADOS + PEÇAS + PNEUS)
+    ========================================================= */
+    .garage-top-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .garage-car-preview {
+      width: 100%;
+      height: 120px;
+      background: #0b0f19;
+      border: 2px solid #2d3a54;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .garage-car-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+    }
+
+    .part-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 5px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .part-icon-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+    }
+
+    .part-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1.2fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #141a26;
+      border: 1px solid #263147;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 780px) {
+      .part-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: #090d16;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      transition: width 0.25s ease, background-color 0.25s ease;
+    }
+
+    /* =========================================================
+       LOJA (MOTORES, PNEUS E PEÇAS COM IMAGENS)
+    ========================================================= */
+    .shop-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .shop-item-img-box {
+      width: 100%;
+      height: 128px;
+      background: #0b0f19;
+      border: 2px solid #2d3a54;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .shop-item-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      display: block;
+    }
+
+    .shop-item-img-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px;
+      text-align: center;
+      color: #94a3b8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .badge-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-red { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .badge-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+
+    /* =========================================================
+       PIT STOP MODULAR (SUB-BLOCOS DE AÇÃO)
+    ========================================================= */
+    .pit-action-subbox {
+      background: #0b0f19;
+      border: 1px solid #263147;
+      border-radius: 5px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+
+    .pit-action-check {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    /* =========================================================
+       CORRIDA AO VIVO (PISTA + TELEMETRIA + PIT STOP)
+    ========================================================= */
+    .race-layout {
+      display: grid;
+      grid-template-columns: 1.35fr 1.1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .race-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    #race-canvas {
+      width: 100%;
+      height: 360px;
+      background: #142618;
+      border: 3px solid #334155;
+      border-radius: 8px;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+      padding: 7px 6px;
+      text-align: left;
+      border-bottom: 1px solid #263147;
+    }
+
+    .leaderboard-table th {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .row-player {
+      background: rgba(245, 158, 11, 0.16);
+      font-weight: 700;
+    }
+
+    .race-log-box {
+      background: #0a0d14;
+      border: 1px solid #263147;
+      border-radius: 6px;
+      padding: 10px;
+      height: 120px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+    }
+
+    .race-log-box div {
+      margin-bottom: 4px;
+    }
+
+    /* Modal / Mensagem customizada (sem alert()) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-box {
+      background: #151c2c;
+      border: 2px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 22px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+    }
+
+    #toast-banner {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e293b;
+      border: 2px solid #fbbf24;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      z-index: 120;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+      transition: opacity 0.25s;
+    }
+
+    .text-gold { color: #fbbf24; }
+    .text-green { color: #4ade80; }
+    .text-red { color: #f87171; }
+    .text-sky { color: #38bdf8; }
+    .text-muted { color: var(--text-muted); }
+    .mt-1 { margin-top: 6px; }
+    .mt-2 { margin-top: 12px; }
+    .mt-3 { margin-top: 18px; }
+    .mb-1 { margin-bottom: 6px; }
+    .mb-2 { margin-bottom: 12px; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+  <!-- ===================================================================
+       TELA 1: CAPA / MENU INICIAL
+  =================================================================== -->
+  <section id="screen-title" onclick="handleTitleScreenClick(event)">
+    <div id="cover-bg-layer">
+      <video id="cover-video-player" src="abertura.mp4" autoplay muted playsinline preload="auto"></video>
+      <canvas id="cover-canvas"></canvas>
+      <img id="cover-custom-img" alt="Capa do Jogo" />
+    </div>
+    <div class="cover-vignette"></div>
+
+    <!-- Ferramentas discretas no canto superior direito -->
+    <div class="cover-topbar-tools" onclick="event.stopPropagation()">
+      <button id="btn-skip-intro" class="btn btn-xs" style="background:rgba(15,23,42,0.85); color:#fbbf24; border-color:#f59e0b;" onclick="skipIntroToMenu()">⏭ Pular Intro</button>
+      <label for="cover-upload-input" class="btn btn-xs" style="background:rgba(15,23,42,0.8); color:#cbd5e1; cursor:pointer;" title="Carregar vídeo .mp4 ou imagem da capa">
+        🎬 Carregar Vídeo/Capa
+      </label>
+      <input type="file" id="cover-upload-input" accept="video/*,image/*" class="hidden" onchange="handleCoverUpload(event)" />
+    </div>
+
+    <!-- Título (surge após o vídeo pausar no último frame ou fallback) -->
+    <div id="title-logo-box" class="title-logo-box" onclick="event.stopPropagation()">
+      <h1 class="title-main">STOCK &amp; GT3<br>BRASIL MANAGER</h1>
+      <p class="title-sub">ESTRATÉGIA, OFICINA &amp; CAMPEONATO NACIONAL · v1.1</p>
+    </div>
+
+    <!-- Botões Centrais (surgem junto com o título) -->
+    <div id="title-menu-stack" class="title-menu-stack" onclick="event.stopPropagation()">
+      <button id="btn-continue-career" class="btn title-menu-btn continue-btn hidden" onclick="continueSavedCareer()">
+        <span>📂 CONTINUAR CARREIRA</span>
+        <small id="continue-career-meta" style="font-family:var(--font-ui); font-size:0.75rem; font-weight:700; color:#dcfce7;"></small>
+      </button>
+      <button class="btn title-menu-btn start-btn" onclick="goToCarSelection()">▶ NOVO JOGO</button>
+      <button class="btn title-menu-btn" onclick="openOptionsModal()">⚙ OPÇÕES</button>
+      <button class="btn title-menu-btn" onclick="openCreditsModal()">★ CRÉDITOS</button>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TELA 2: PREPARAÇÃO — ESCOLHA DO CARRO
+  =================================================================== -->
+  <section id="screen-car-select" class="hidden">
+    <div class="setup-wrapper">
+      <div class="panel panel-gold">
+        <div class="flex-between">
+          <div>
+            <span class="pixel-font text-gold" style="font-size:0.7rem;">ETAPA 1 DE 2 · GARAGEM INICIAL</span>
+            <h2 class="pixel-font mt-1" style="font-size:1.15rem;">ESCOLHA SEU VEÍCULO</h2>
+          </div>
+          <button class="btn btn-sm" onclick="backToTitleScreen()">← Voltar à Capa</button>
+        </div>
+        <p class="text-muted mt-2">
+          Selecione um dos 3 clássicos nacionais para iniciar a temporada com <strong>R$ 50.000,00</strong> de caixa e <strong>1 jogo de pneus slick</strong> já montado.
+        </p>
+
+        <div id="car-cards-container" class="cars-selection-list"></div>
+
+        <div class="mt-3" style="text-align:right;">
+          <button class="btn btn-primary" onclick="goToDriverSetup()">AVANÇAR PARA CADASTRO DO PILOTO →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TELA 3: PREPARAÇÃO — CADASTRO DO PILOTO E EQUIPE
+  =================================================================== -->
+  <section id="screen-driver-setup" class="hidden">
+    <div class="setup-wrapper" style="max-width: 780px;">
+      <div class="panel panel-gold">
+        <div class="flex-between">
+          <div>
+            <span class="pixel-font text-gold" style="font-size:0.7rem;">ETAPA 2 DE 2 · FICHA DO PILOTO TITULAR</span>
+            <h2 class="pixel-font mt-1" style="font-size:1.15rem;">CADASTRO DO PILOTO</h2>
+          </div>
+          <button class="btn btn-sm" onclick="showScreen('screen-car-select')">← Trocar Carro</button>
+        </div>
+
+        <hr style="border-color:#334155; margin: 16px 0 20px;" />
+
+        <div class="driver-setup-top-split">
+          <div class="driver-fields-left">
+            <div class="form-group">
+              <label for="input-team-name">Nome da Equipe:</label>
+              <input type="text" id="input-team-name" class="form-control" maxlength="28" placeholder="Ex: Scuderia Interlagos" value="Equipe Bandeirante" />
+            </div>
+
+            <div class="form-group">
+              <label for="input-driver-name">Nome do Piloto:</label>
+              <input type="text" id="input-driver-name" class="form-control" maxlength="26" placeholder="Ex: Ayrton Silva" value="Ayrton Silva" />
+            </div>
+
+            <div class="form-group">
+              <label for="input-driver-age">Idade do Piloto:</label>
+              <input type="number" id="input-driver-age" class="form-control" min="18" max="65" value="26" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>Sexo do Piloto:</label>
+              <div class="gender-toggle-group">
+                <button type="button" id="btn-gender-M" class="gender-btn active" onclick="setDriverGender('M')">♂ Masculino</button>
+                <button type="button" id="btn-gender-F" class="gender-btn" onclick="setDriverGender('F')">♀ Feminino</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="driver-portrait-right">
+            <div id="driver-portrait-preview" class="driver-portrait-frame"></div>
+            <div class="driver-nav-controls">
+              <button type="button" class="btn btn-xs" onclick="cycleDriverAvatar(-1)">◀ Ant.</button>
+              <span id="driver-avatar-counter" style="font-size:0.78rem; font-weight:700; color:#cbd5e1;">1 / 4</span>
+              <button type="button" class="btn btn-xs" onclick="cycleDriverAvatar(1)">Próx. ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-3" style="border-color: var(--accent-purple);">
+          <div class="flex-between">
+            <span class="pixel-font" style="font-size:0.72rem; color:#d8b4fe;">ESTADO MENTAL / HABILIDADE INICIAL</span>
+            <span class="pixel-font text-green" style="font-size:0.85rem;">75 / 100</span>
+          </div>
+          <div class="progress-track mt-2">
+            <div class="progress-fill" style="width:75%; background: linear-gradient(90deg, #9333ea, #c084fc);"></div>
+          </div>
+          <ul class="text-muted mt-2" style="font-size:0.84rem; padding-left:18px; line-height:1.55;">
+            <li>Inicia em <strong>75</strong> (Fator de ritmo <code>F_piloto = 0,9925</code>).</li>
+            <li>Pódio concede <strong>+10</strong> (1º), <strong>+6</strong> (2º) ou <strong>+3</strong> (3º) de habilidade (máx. 100).</li>
+            <li>Fora do pódio reduz de <strong>-1</strong> (4º) até <strong>-5</strong> (8º) pontos de habilidade.</li>
+          </ul>
+        </div>
+
+        <div class="mt-3" style="text-align:right;">
+          <button class="btn btn-primary" onclick="confirmCareerStart()">CONFIRMAR E IR PARA A GARAGEM →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TELA 4: JOGO PRINCIPAL (HUD + ABAS)
+  =================================================================== -->
+  <section id="screen-main" class="hidden">
+    <header id="top-hud">
+      <div class="hud-pills">
+        <div class="hud-pill" style="border-color:#f59e0b;">🏁 <span id="hud-team-name" class="text-gold">Equipe</span></div>
+        <div class="hud-pill">💰 Caixa: <span id="hud-cash" class="text-green">R$ 50.000,00</span></div>
+        <div class="hud-pill">🏆 Etapa: <span id="hud-stage" class="text-gold">1 / 6</span></div>
+        <div class="hud-pill">⭐ Pontos: <span id="hud-points" class="text-sky">0 pts</span></div>
+        <div class="hud-pill">🧠 Habilidade: <span id="hud-skill" style="color:#d8b4fe;">75/100</span></div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-xs" onclick="backToTitleScreen()">🏠 Capa</button>
+        <button class="btn btn-xs" onclick="openOptionsModal()">⚙ Opções</button>
+      </div>
+    </header>
+
+    <nav class="nav-tabs" id="main-nav-tabs">
+      <button class="nav-tab active" data-tab="tab-garage" onclick="switchMainTab('tab-garage')">🔧 GARAGEM</button>
+      <button class="nav-tab" data-tab="tab-shop" onclick="switchMainTab('tab-shop')">🛒 LOJA</button>
+      <button class="nav-tab" data-tab="tab-prerace" onclick="switchMainTab('tab-prerace')">📋 PRÉ-CORRIDA &amp; ESTRATÉGIA</button>
+      <button class="nav-tab" data-tab="tab-championship" onclick="switchMainTab('tab-championship')">🏆 CAMPEONATO</button>
+      <button class="nav-tab hidden" id="nav-tab-race" data-tab="tab-race" onclick="switchMainTab('tab-race')">🏁 CORRIDA AO VIVO</button>
+    </nav>
+
+    <main class="main-container">
+      <!-- ABA 1: GARAGEM -->
+      <div id="tab-garage" class="panel panel-gold">
+        <div class="flex-between mb-2">
+          <div>
+            <h2 id="garage-team-heading" class="pixel-font text-gold" style="font-size:1.05rem;">GARAGEM DA EQUIPE</h2>
+            <p class="text-muted mt-1" style="font-size:0.88rem;">
+              Gerencie a integridade do chassi, realize reparos entre etapas e instale motores ou pneus novos.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="switchMainTab('tab-prerace')">IR PARA PRÓXIMA CORRIDA →</button>
+        </div>
+
+        <div class="garage-top-grid mt-2" id="garage-three-squares"></div>
+
+        <div class="card mt-2">
+          <div class="flex-between mb-2">
+            <h3 class="pixel-font" style="font-size:0.8rem; color:#e2e8f0;">ESTADO DAS 6 CATEGORIAS DE PEÇAS</h3>
+            <button class="btn btn-gold btn-sm" onclick="repairAllParts()">🔧 Reparar Todas as Peças</button>
+          </div>
+          <div id="garage-parts-list"></div>
+        </div>
+
+        <div class="card mt-2">
+          <h3 class="pixel-font mb-2" style="font-size:0.8rem; color:#e2e8f0;">ESTOQUE DE PNEUS DA EQUIPE</h3>
+          <div id="garage-tires-stock" class="shop-grid-3"></div>
+        </div>
+      </div>
+
+      <!-- ABA 2: LOJA -->
+      <div id="tab-shop" class="panel panel-gold hidden">
+        <div class="flex-between mb-2">
+          <div>
+            <h2 class="pixel-font text-gold" style="font-size:1.05rem;">LOJA DE MOTORES, PNEUS &amp; PEÇAS</h2>
+            <p class="text-muted mt-1" style="font-size:0.88rem;">
+              Invista o prêmio das corridas para extrair mais potência e garantir jogos de pneus para seco, misto e chuva.
+            </p>
+          </div>
+        </div>
+
+        <h3 class="pixel-font mt-3 mb-1" style="font-size:0.78rem; color:#38bdf8;">1. UPGRADE DE MOTOR (VEÍCULO ATUAL)</h3>
+        <div id="shop-engines-list" class="shop-grid-3"></div>
+
+        <h3 class="pixel-font mt-3 mb-1" style="font-size:0.78rem; color:#4ade80;">2. CONJUNTOS DE PNEUS (JOGO COM 4 PNEUS)</h3>
+        <div id="shop-tires-list" class="shop-grid-3"></div>
+
+        <h3 class="pixel-font mt-3 mb-1" style="font-size:0.78rem; color:#fbbf24;">3. REPOSIÇÃO RÁPIDA DE PEÇAS (100% NOVAS)</h3>
+        <div id="shop-parts-list" class="shop-grid-3"></div>
+      </div>
+
+      <!-- ABA 3: PRÉ-CORRIDA & ESTRATÉGIA -->
+      <div id="tab-prerace" class="panel panel-gold hidden">
+        <div id="prerace-season-done" class="hidden" style="text-align:center; padding:30px 10px;">
+          <h2 class="pixel-font text-gold" style="font-size:1.25rem;">TEMPORADA ENCERRADA!</h2>
+          <p class="mt-2" style="font-size:1rem;">Todas as 6 etapas do Campeonato Nacional foram concluídas.</p>
+          <button class="btn btn-primary mt-3" onclick="switchMainTab('tab-championship')">VER CLASSIFICAÇÃO FINAL</button>
+        </div>
+
+        <div id="prerace-main-panel">
+          <div class="flex-between mb-2">
+            <div>
+              <span class="badge badge-amber">ETAPA <span id="pre-stage-num">1</span> DE 6</span>
+              <h2 class="pixel-font text-gold mt-1" style="font-size:1.1rem;" id="pre-track-title">Autódromo de Interlagos</h2>
+            </div>
+            <div style="text-align:right;">
+              <div class="text-muted" style="font-size:0.82rem;">Previsão Meteorológica por Volta</div>
+              <div id="pre-weather-badge" style="font-size:0.95rem; font-weight:800; margin-top:4px;">☀️ Pista Seca</div>
+            </div>
+          </div>
+
+          <div class="card mb-2">
+            <div class="prerace-track-split" style="display:grid; grid-template-columns: 1fr 220px; gap:14px; align-items:center;">
+              <div>
+                <div class="flex-between">
+                  <strong style="color:#e2e8f0;">DADOS DO AUTÓDROMO</strong>
+                  <span id="pre-track-meta" class="text-sky" style="font-weight:700;">35 voltas · 150,8 km · 4,31 km/volta</span>
+                </div>
+                <p id="pre-track-desc" class="text-muted mt-1" style="font-size:0.88rem;"></p>
+                <div id="pre-track-tips" class="mt-2" style="font-size:0.85rem;"></div>
+              </div>
+              <div style="background:#0b0f19; border:2px solid #334155; border-radius:6px; padding:4px;">
+                <canvas id="prerace-minimap-canvas" width="210" height="122" style="width:100%; height:118px; display:block; border-radius:4px; image-rendering:pixelated;"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estratégia de Largada e Paradas Modulares (Só Pneu, Só Combustível ou Ambos) -->
+          <div class="card">
+            <div class="flex-between mb-2">
+              <h3 class="pixel-font" style="font-size:0.8rem; color:#fbbf24;">ESTRATÉGIA DE PNEUS, COMBUSTÍVEL &amp; PARADAS</h3>
+              <span class="text-muted" style="font-size:0.78rem;">💡 Pneus rendem melhor aquecidos (85%–45%) e estouram em 0%</span>
+            </div>
+
+            <div class="shop-grid-3">
+              <!-- 1. Largada -->
+              <div style="background:#121722; padding:12px; border-radius:6px; border:1px solid #334155;">
+                <strong class="text-green">1. LARGADA (VOLTA 1)</strong>
+                <div class="form-group mt-2">
+                  <label style="font-size:0.82rem;">Jogo de Pneus Inicial:</label>
+                  <select id="strat-start-tire" class="form-control" style="padding:8px; font-size:0.88rem;" onchange="updateStrategyCalc()"></select>
+                  <div id="strat-start-tire-autonomy" class="mt-1" style="font-size:0.75rem; color:#cbd5e1; background:#0b0f19; padding:5px 7px; border-radius:4px; border:1px solid #263147;">
+                    Autonomia Pneu: ☀️ ~14v · ⛅ ~11v · 🌧️ ~7v
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label style="font-size:0.82rem;">Combustível no Tanque: <span id="strat-fuel-val" class="text-gold">70 L</span></label>
+                  <input type="range" id="strat-start-fuel" min="10" max="80" value="70" style="width:100%;" oninput="updateStrategyCalc()" />
+                  <div id="strat-fuel-autonomy" class="text-sky mt-1" style="font-size:0.8rem; font-weight:700;">
+                    Autonomia do Tanque: ~37 voltas (161 km)
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Parada 1 (Modular: Pneu e/ou Combustível) -->
+              <div style="background:#121722; padding:12px; border-radius:6px; border:1px solid #334155;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="strat-pit1-on" onchange="togglePitPlan(1)" />
+                  <strong class="text-sky">2. PARADA PLANEJADA 1</strong>
+                </label>
+                <div id="pit1-body" class="mt-2" style="opacity:0.45; pointer-events:none;">
+                  <div class="form-group">
+                    <label style="font-size:0.82rem;">Volta da Parada 1:</label>
+                    <input type="number" id="strat-pit1-lap" class="form-control" style="padding:7px; font-size:0.88rem;" min="2" max="60" value="15" />
+                  </div>
+
+                  <!-- Ação A: Trocar Pneus -->
+                  <div class="pit-action-subbox">
+                    <label class="pit-action-check">
+                      <input type="checkbox" id="strat-pit1-change-tire" checked onchange="togglePitActionFields(1)" />
+                      <span>🛞 Trocar Pneus (+3,8s)</span>
+                    </label>
+                    <div id="pit1-tire-fields" class="mt-1">
+                      <select id="strat-pit1-tire" class="form-control" style="padding:7px; font-size:0.84rem;" onchange="updateStrategyCalc()"></select>
+                      <div id="strat-pit1-tire-autonomy" class="mt-1" style="font-size:0.73rem; color:#cbd5e1;">
+                        Autonomia Pneu: ☀️ ~14v · ⛅ ~11v · 🌧️ ~7v
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Ação B: Reabastecer (Aditivo: Sobra + Litros Adicionados) -->
+                  <div class="pit-action-subbox" style="margin-bottom:0;">
+                    <label class="pit-action-check">
+                      <input type="checkbox" id="strat-pit1-refuel" checked onchange="togglePitActionFields(1)" />
+                      <span>⛽ Adicionar: <span id="strat-pit1-fuel-val" class="text-gold">+40 L</span></span>
+                    </label>
+                    <div id="pit1-fuel-fields" class="mt-1">
+                      <input type="range" id="strat-pit1-fuel" min="5" max="80" value="40" style="width:100%;" oninput="updateStrategyCalc()" />
+                      <div id="strat-pit1-autonomy" class="text-sky" style="font-size:0.75rem; font-weight:700;">
+                        +40 L (~21 voltas) · Est. após box: ~40 L
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Parada 2 (Modular: Pneu e/ou Combustível Aditivo) -->
+              <div style="background:#121722; padding:12px; border-radius:6px; border:1px solid #334155;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" id="strat-pit2-on" onchange="togglePitPlan(2)" />
+                  <strong class="text-sky">3. PARADA PLANEJADA 2</strong>
+                </label>
+                <div id="pit2-body" class="mt-2" style="opacity:0.45; pointer-events:none;">
+                  <div class="form-group">
+                    <label style="font-size:0.82rem;">Volta da Parada 2:</label>
+                    <input type="number" id="strat-pit2-lap" class="form-control" style="padding:7px; font-size:0.88rem;" min="3" max="65" value="25" oninput="updateStrategyCalc()" />
+                  </div>
+
+                  <!-- Ação A: Trocar Pneus -->
+                  <div class="pit-action-subbox">
+                    <label class="pit-action-check">
+                      <input type="checkbox" id="strat-pit2-change-tire" checked onchange="togglePitActionFields(2)" />
+                      <span>🛞 Trocar Pneus (+3,8s)</span>
+                    </label>
+                    <div id="pit2-tire-fields" class="mt-1">
+                      <select id="strat-pit2-tire" class="form-control" style="padding:7px; font-size:0.84rem;" onchange="updateStrategyCalc()"></select>
+                      <div id="strat-pit2-tire-autonomy" class="mt-1" style="font-size:0.73rem; color:#cbd5e1;">
+                        Autonomia Pneu: ☀️ ~14v · ⛅ ~11v · 🌧️ ~7v
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Ação B: Reabastecer (Aditivo: Sobra + Litros Adicionados) -->
+                  <div class="pit-action-subbox" style="margin-bottom:0;">
+                    <label class="pit-action-check">
+                      <input type="checkbox" id="strat-pit2-refuel" checked onchange="togglePitActionFields(2)" />
+                      <span>⛽ Adicionar: <span id="strat-pit2-fuel-val" class="text-gold">+30 L</span></span>
+                    </label>
+                    <div id="pit2-fuel-fields" class="mt-1">
+                      <input type="range" id="strat-pit2-fuel" min="5" max="80" value="30" style="width:100%;" oninput="updateStrategyCalc()" />
+                      <div id="strat-pit2-autonomy" class="text-sky" style="font-size:0.75rem; font-weight:700;">
+                        +30 L (~16 voltas) · Est. após box: ~30 L
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="strategy-warnings" class="mt-2"></div>
+
+            <div class="flex-between mt-3">
+              <button class="btn btn-sm" onclick="switchMainTab('tab-garage')">← Voltar à Garagem</button>
+              <button class="btn btn-primary" onclick="startLiveRace()">🚦 LARGAR PARA A CORRIDA!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 4: CAMPEONATO -->
+      <div id="tab-championship" class="panel panel-gold hidden">
+        <div class="flex-between mb-2">
+          <div>
+            <h2 class="pixel-font text-gold" style="font-size:1.05rem;">CAMPEONATO NACIONAL — CLASSIFICAÇÃO &amp; CALENDÁRIO</h2>
+            <p class="text-muted mt-1" style="font-size:0.88rem;">
+              Pontuação oficial: 1º (25), 2º (18), 3º (15), 4º (12), 5º (10), 6º (8), 7º (6), 8º (4).
+            </p>
+          </div>
+          <button id="btn-new-season" class="btn btn-gold btn-sm hidden" onclick="startNewSeason()">🔄 Iniciar Nova Temporada</button>
+        </div>
+
+        <div class="race-layout mt-2">
+          <div class="card">
+            <h3 class="pixel-font mb-2" style="font-size:0.78rem; color:#fbbf24;">TABELA DE PILOTOS</h3>
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Pos</th>
+                  <th>Piloto</th>
+                  <th>Carro</th>
+                  <th>Vitórias</th>
+                  <th>Pontos</th>
+                </tr>
+              </thead>
+              <tbody id="champ-standings-body"></tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3 class="pixel-font mb-2" style="font-size:0.78rem; color:#38bdf8;">CALENDÁRIO DAS 6 ETAPAS</h3>
+            <div id="champ-calendar-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 5: CORRIDA AO VIVO -->
+      <div id="tab-race" class="panel panel-gold hidden">
+        <div class="flex-between mb-2">
+          <div>
+            <span class="badge badge-green" id="race-status-badge">CORRIDA EM ANDAMENTO</span>
+            <h2 class="pixel-font text-gold mt-1" style="font-size:1rem;" id="race-header-title">ETAPA 1 · INTERLAGOS</h2>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span class="hud-pill">Volta: <strong id="race-lap-counter" class="text-gold">1 / 35</strong></span>
+            <span class="hud-pill" id="race-weather-pill">☀️ Seco</span>
+            <button class="btn btn-xs" id="btn-speed-1x" onclick="setSimSpeed(1)">1x</button>
+            <button class="btn btn-xs" id="btn-speed-2x" onclick="setSimSpeed(2)">2x</button>
+            <button class="btn btn-xs" id="btn-speed-4x" onclick="setSimSpeed(4)">4x</button>
+          </div>
+        </div>
+
+        <div class="race-layout">
+          <div>
+            <canvas id="race-canvas"></canvas>
+
+            <!-- Ordem de Box Modular ao Vivo (Só Pneu, Só Combustível ou Ambos) -->
+            <div class="card mt-2">
+              <div class="flex-between mb-1">
+                <strong class="pixel-font" style="font-size:0.72rem; color:#38bdf8;">ORDEM DE BOX &amp; ESTRATÉGIA IMEDIATA</strong>
+                <span id="pit-status-text" class="text-muted" style="font-size:0.82rem;">Nenhuma parada agendada para esta volta</span>
+              </div>
+              <div style="display:grid; grid-template-columns: 1.15fr 0.85fr auto; gap:10px; align-items:end;" class="mt-1">
+                <div>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; color:#e2e8f0; font-weight:700; cursor:pointer; margin-bottom:4px;">
+                    <input type="checkbox" id="live-pit-change-tire" checked onchange="toggleLivePitInputs()" />
+                    <span>🛞 Trocar Pneus:</span>
+                  </label>
+                  <select id="live-pit-tire" class="form-control" style="padding:7px; font-size:0.84rem;"></select>
+                </div>
+                <div>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; color:#e2e8f0; font-weight:700; cursor:pointer; margin-bottom:4px;">
+                    <input type="checkbox" id="live-pit-refuel" checked onchange="toggleLivePitInputs()" />
+                    <span>⛽ Adicionar (+L):</span>
+                  </label>
+                  <input type="number" id="live-pit-fuel" class="form-control" style="padding:7px; font-size:0.84rem;" min="5" max="80" value="35" />
+                </div>
+                <button id="btn-call-pit" class="btn btn-gold btn-sm" onclick="toggleManualPitCall()">🛑 CHAMAR BOX</button>
+              </div>
+            </div>
+
+            <div class="mt-2">
+              <div class="text-muted mb-1" style="font-size:0.78rem; font-weight:700;">RÁDIO DA EQUIPE &amp; DIREÇÃO DE PROVA:</div>
+              <div id="race-log-box" class="race-log-box"></div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="card" style="border-color: var(--border-gold);">
+              <h3 class="pixel-font mb-2" style="font-size:0.76rem; color:#fbbf24;">TELEMETRIA DO CARRO</h3>
+
+              <div class="flex-between">
+                <small>Combustível:</small>
+                <strong id="tel-fuel-text" class="text-green">70.0 L (~37 voltas)</strong>
+              </div>
+              <div class="progress-track mt-1 mb-2">
+                <div id="tel-fuel-bar" class="progress-fill" style="width:100%; background:#22c55e;"></div>
+              </div>
+
+              <div class="flex-between">
+                <small>Pneu Atual:</small>
+                <strong id="tel-tire-label" class="text-sky">Bandeirante Seco</strong>
+              </div>
+              <div class="flex-between mt-1">
+                <small>Integridade &amp; Temp.:</small>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span id="tel-tire-phase-badge" class="badge badge-blue" style="font-size:0.65rem; padding:2px 6px;">❄️ Aquecendo</span>
+                  <strong id="tel-tire-pct" class="text-green">100%</strong>
+                </div>
+              </div>
+              <div class="flex-between mt-1">
+                <small>Autonomia Estimada:</small>
+                <strong id="tel-tire-laps" class="text-sky">~13 voltas</strong>
+              </div>
+              <div class="progress-track mt-1 mb-2">
+                <div id="tel-tire-bar" class="progress-fill" style="width:100%; background:#22c55e;"></div>
+              </div>
+
+              <div class="flex-between">
+                <small>Integridade Média Mecânica:</small>
+                <strong id="tel-mech-pct" class="text-green">100%</strong>
+              </div>
+              <div id="tel-part-warning" class="text-red mt-1" style="font-size:0.78rem; font-weight:700;"></div>
+            </div>
+
+            <div class="card" style="flex:1; overflow-x:auto;">
+              <h3 class="pixel-font mb-2" style="font-size:0.76rem; color:#e2e8f0;">CLASSIFICAÇÃO EM TEMPO REAL</h3>
+              <table class="leaderboard-table">
+                <thead>
+                  <tr>
+                    <th>Pos</th>
+                    <th>Piloto</th>
+                    <th>Volta</th>
+                    <th>Intervalo</th>
+                    <th>Últ. Volta</th>
+                    <th>Ritmo</th>
+                    <th>Boxes</th>
+                  </tr>
+                </thead>
+                <tbody id="race-leaderboard-body"></tbody>
+              </table>
+            </div>
+
+            <div style="text-align:right;">
+              <button class="btn btn-danger btn-xs" onclick="abandonCurrentRace()">Abandonar Prova</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ===================================================================
+       CALCULADORA TÁTICA RETRÁTIL (DISPONÍVEL EM TODAS AS TELAS)
+  =================================================================== -->
+  <div id="global-calc-widget" class="calc-widget-container">
+    <div id="global-calc-panel" class="calc-panel hidden">
+      <div class="calc-header">
+        <span class="pixel-font text-gold" style="font-size:0.62rem;">🧮 CALCULADORA</span>
+        <button type="button" class="btn btn-xs" style="padding:2px 7px; font-size:0.72rem;" onclick="toggleGlobalCalculator()" title="Encolher Calculadora">▼</button>
+      </div>
+      <div class="calc-display-box">
+        <div id="calc-expr-line" class="calc-expr-line"></div>
+        <div id="calc-main-line" class="calc-main-line">0</div>
+      </div>
+      <div class="calc-keypad">
+        <button type="button" class="calc-key clear" onclick="calcClear()">C</button>
+        <button type="button" class="calc-key clear" onclick="calcBackspace()">⌫</button>
+        <button type="button" class="calc-key op" onclick="calcOperator('/')">÷</button>
+        <button type="button" class="calc-key op" onclick="calcOperator('*')">×</button>
+
+        <button type="button" class="calc-key" onclick="calcDigit('7')">7</button>
+        <button type="button" class="calc-key" onclick="calcDigit('8')">8</button>
+        <button type="button" class="calc-key" onclick="calcDigit('9')">9</button>
+        <button type="button" class="calc-key op" onclick="calcOperator('-')">−</button>
+
+        <button type="button" class="calc-key" onclick="calcDigit('4')">4</button>
+        <button type="button" class="calc-key" onclick="calcDigit('5')">5</button>
+        <button type="button" class="calc-key" onclick="calcDigit('6')">6</button>
+        <button type="button" class="calc-key op" onclick="calcOperator('+')">+</button>
+
+        <button type="button" class="calc-key" onclick="calcDigit('1')">1</button>
+        <button type="button" class="calc-key" onclick="calcDigit('2')">2</button>
+        <button type="button" class="calc-key" onclick="calcDigit('3')">3</button>
+        <button type="button" class="calc-key eq" style="grid-row: span 2;" onclick="calcEquals()">=</button>
+
+        <button type="button" class="calc-key" style="grid-column: span 2;" onclick="calcDigit('0')">0</button>
+        <button type="button" class="calc-key" onclick="calcDecimal()">.</button>
+      </div>
+    </div>
+    <button type="button" id="btn-toggle-calc" class="btn btn-xs" style="background:rgba(19,24,36,0.92); color:#fbbf24; border:2px solid #f59e0b; padding:8px 12px; box-shadow:0 4px 12px rgba(0,0,0,0.6);" onclick="toggleGlobalCalculator()">
+      🧮 Calculadora
+    </button>
+  </div>
+
+  <!-- ===================================================================
+       MODAIS (OPÇÕES, CRÉDITOS & PÓDIO FINAL)
+  =================================================================== -->
+  <div id="modal-backdrop" class="modal-backdrop hidden" onclick="closeModalOnBackdrop(event)">
+    <div id="modal-options" class="modal-box hidden">
+      <h3 class="pixel-font text-gold" style="font-size:0.95rem;">⚙ OPÇÕES DO JOGO</h3>
+      <div class="form-group mt-3">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+          <input type="checkbox" id="opt-sound-effects" checked />
+          <span>Efeitos Sonoros Sintetizados (Web Audio 16-bit)</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="opt-default-sim-speed">Velocidade Padrão da Simulação:</label>
+        <select id="opt-default-sim-speed" class="form-control">
+          <option value="1">1x (Normal - Tático)</option>
+          <option value="2" selected>2x (Dinâmico - Recomendado)</option>
+          <option value="4">4x (Rápido)</option>
+        </select>
+      </div>
+      <div class="flex-between mt-3">
+        <button class="btn btn-danger btn-sm" onclick="resetEntireSave()">Resetar Carreira</button>
+        <button class="btn btn-primary btn-sm" onclick="closeModal()">Salvar &amp; Fechar</button>
+      </div>
+    </div>
+
+    <div id="modal-credits" class="modal-box hidden">
+      <h3 class="pixel-font text-gold" style="font-size:0.95rem;">★ CRÉDITOS — v1.1</h3>
+      <p class="mt-2" style="line-height:1.6; font-size:0.92rem;">
+        <strong>Stock &amp; GT3 Brasil Manager</strong><br />
+        Simulador de gerenciamento de automobilismo clássico brasileiro com estética pixel art 16-bit.
+      </p>
+      <ul class="text-muted mt-2" style="font-size:0.85rem; padding-left:18px; line-height:1.6;">
+        <li>Curva térmica de pneus em 4 fases + reaproveitamento automático de jogos semi-novos (&gt;15%).</li>
+        <li>Reabastecimento aditivo nos boxes (sobra do tanque + litros adicionados) e desgaste realista das 6 peças.</li>
+        <li>Pit stops modulares, balanceamento progressivo da IA e calculadora tática integrada.</li>
+      </ul>
+      <div class="mt-3" style="text-align:right;">
+        <button class="btn btn-gold btn-sm" onclick="closeModal()">Fechar</button>
+      </div>
+    </div>
+
+    <div id="modal-podium" class="modal-box hidden">
+      <span class="badge badge-amber" id="pod-badge">FIM DE PROVA</span>
+      <h3 class="pixel-font text-gold mt-1" style="font-size:1.05rem;" id="pod-title">1º LUGAR - VITÓRIA!</h3>
+      <p id="pod-subtitle" class="mt-1" style="font-size:0.92rem;"></p>
+
+      <div class="card mt-2" id="pod-finance-breakdown"></div>
+      <div class="card mt-2" id="pod-wear-summary"></div>
+
+      <div class="mt-3" style="text-align:right;">
+        <button class="btn btn-primary" onclick="confirmPodiumAndReturnGarage()">VOLTAR À GARAGEM →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-banner" class="hidden"></div>
+
+  <script>
+    // =====================================================================
+    // 1. TABELAS DE DADOS DO JOGO (v1.0)
+    // =====================================================================
+    const SAVE_STORAGE_KEY = 'stock_gt3_brasil_manager_v10_save';
+
+    const CARS_DATA = {
+      cobra: {
+        id: 'cobra',
+        name: 'Cobra 4100',
+        brand: 'GMB / Bandeirante Motors',
+        color: '#ef4444',
+        accent: '#fca5a5',
+        imageFile: 'carro_cobra.png',
+        baseLapSec: 94.2,
+        straightBonus: 0.985,
+        cornerPenalty: 1.012,
+        desc: 'Cupê 6 cilindros de torque brutal. Domina retas longas, exige cuidado nas freadas.',
+        engines: {
+          normal: { name: 'Normal 4.1 6-Cil', hp: 380, vmax: 265, kmPerL: 2.3, tank: 70, price: 0, lapFactor: 1.000 },
+          aspirado: { name: 'Aspirado Comando Bravo', hp: 440, vmax: 282, kmPerL: 1.9, tank: 75, price: 18000, lapFactor: 0.976 },
+          turbo: { name: 'Turbo Intercooler', hp: 520, vmax: 305, kmPerL: 1.5, tank: 80, price: 38000, lapFactor: 0.952 }
+        }
+      },
+      besouro: {
+        id: 'besouro',
+        name: 'AutoSul Besouro',
+        brand: 'Volksbrás',
+        color: '#eab308',
+        accent: '#fef08a',
+        imageFile: 'carro_besouro.png',
+        baseLapSec: 94.8,
+        straightBonus: 1.010,
+        cornerPenalty: 0.986,
+        desc: 'Leve, ágil e arisco nas curvas travadas. Excelente tração na saída de baixa.',
+        engines: {
+          normal: { name: 'Normal 1600 Dupla Carb.', hp: 320, vmax: 240, kmPerL: 2.7, tank: 65, price: 0, lapFactor: 1.000 },
+          aspirado: { name: 'Aspirado 2.1 Forjado', hp: 375, vmax: 258, kmPerL: 2.2, tank: 70, price: 16500, lapFactor: 0.975 },
+          turbo: { name: 'Turbo Pressão Alta', hp: 450, vmax: 280, kmPerL: 1.8, tank: 75, price: 35000, lapFactor: 0.950 }
+        }
+      },
+      planalto: {
+        id: 'planalto',
+        name: 'AutoSul Planalto',
+        brand: 'Volksbrás',
+        color: '#3b82f6',
+        accent: '#93c5fd',
+        imageFile: 'carro_planalto.png',
+        baseLapSec: 94.5,
+        straightBonus: 0.998,
+        cornerPenalty: 0.996,
+        desc: 'Equilíbrio aerodinâmico e baixo consumo. Ideal para estratégias com menos paradas.',
+        engines: {
+          normal: { name: 'Normal Boxer 1700', hp: 275, vmax: 248, kmPerL: 3.2, tank: 80, price: 0, lapFactor: 1.000 },
+          aspirado: { name: 'Aspirado Preparado', hp: 330, vmax: 266, kmPerL: 2.6, tank: 80, price: 15500, lapFactor: 0.976 },
+          turbo: { name: 'Turbo GT Nacional', hp: 410, vmax: 290, kmPerL: 2.1, tank: 85, price: 34000, lapFactor: 0.951 }
+        }
+      }
+    };
+
+    const ENGINE_IMAGES = {
+      normal: 'motor_normal.png',
+      aspirado: 'motor_aspirado.png',
+      turbo: 'motor_turbo.png'
+    };
+
+    const DRIVER_PORTRAIT_FILES = {
+      M: ['piloto_m1.png', 'piloto_m2.png', 'piloto_m3.png', 'piloto_m4.png'],
+      F: ['piloto_f1.png', 'piloto_f2.png', 'piloto_f3.png', 'piloto_f4.png']
+    };
+
+    const TIRE_CATALOG = [
+      { id: 'band_seco', brand: 'Bandeirante Pneus', type: 'seco', label: 'Bandeirante Seco', price: 2400, imageFile: 'pneu_band_seco.png', life: { seca: 60, mista: 50, chuva: 30 }, pace: { seca: 1.000, mista: 1.045, chuva: 1.150 } },
+      { id: 'band_misto', brand: 'Bandeirante Pneus', type: 'misto', label: 'Bandeirante Misto', price: 2600, imageFile: 'pneu_band_misto.png', life: { seca: 48, mista: 72, chuva: 58 }, pace: { seca: 1.028, mista: 1.008, chuva: 1.035 } },
+      { id: 'band_chuva', brand: 'Bandeirante Pneus', type: 'chuva', label: 'Bandeirante Chuva', price: 2800, imageFile: 'pneu_band_chuva.png', life: { seca: 22, mista: 55, chuva: 82 }, pace: { seca: 1.075, mista: 1.025, chuva: 0.992 } },
+
+      { id: 'tupa_seco', brand: 'Tupã Motorsport', type: 'seco', label: 'Tupã Seco', price: 3200, imageFile: 'pneu_tupa_seco.png', life: { seca: 78, mista: 62, chuva: 35 }, pace: { seca: 0.993, mista: 1.040, chuva: 1.145 } },
+      { id: 'tupa_misto', brand: 'Tupã Motorsport', type: 'misto', label: 'Tupã Misto', price: 3400, imageFile: 'pneu_tupa_misto.png', life: { seca: 60, mista: 88, chuva: 68 }, pace: { seca: 1.022, mista: 1.002, chuva: 1.028 } },
+      { id: 'tupa_chuva', brand: 'Tupã Motorsport', type: 'chuva', label: 'Tupã Chuva', price: 3600, imageFile: 'pneu_tupa_chuva.png', life: { seca: 28, mista: 66, chuva: 98 }, pace: { seca: 1.068, mista: 1.020, chuva: 0.986 } },
+
+      { id: 'apex_seco', brand: 'ApexBR Racing', type: 'seco', label: 'ApexBR Seco', price: 4200, imageFile: 'pneu_apex_seco.png', life: { seca: 95, mista: 74, chuva: 40 }, pace: { seca: 0.985, mista: 1.035, chuva: 1.140 } },
+      { id: 'apex_misto', brand: 'ApexBR Racing', type: 'misto', label: 'ApexBR Misto', price: 4400, imageFile: 'pneu_apex_misto.png', life: { seca: 72, mista: 105, chuva: 80 }, pace: { seca: 1.016, mista: 0.995, chuva: 1.020 } },
+      { id: 'apex_chuva', brand: 'ApexBR Racing', type: 'chuva', label: 'ApexBR Chuva', price: 4600, imageFile: 'pneu_apex_chuva.png', life: { seca: 34, mista: 78, chuva: 115 }, pace: { seca: 1.060, mista: 1.015, chuva: 0.978 } }
+    ];
+
+    const PART_CATEGORIES = [
+      { id: 'motor_trans', name: 'Motor e Transmissão', newPrice: 4800, repairPerPct: 38, kmPerPct: 13.0, imageFile: 'peca_motor.png', emoji: '⚙️' },
+      { id: 'suspensao', name: 'Suspensão e Direção', newPrice: 3600, repairPerPct: 28, kmPerPct: 11.8, imageFile: 'peca_suspensao.png', emoji: '🔩' },
+      { id: 'freios', name: 'Sistema de Freios', newPrice: 3200, repairPerPct: 25, kmPerPct: 11.0, imageFile: 'peca_freios.png', emoji: '🛑' },
+      { id: 'eletrica', name: 'Elétrica e Eletrônica', newPrice: 2800, repairPerPct: 22, kmPerPct: 15.5, imageFile: 'peca_eletrica.png', emoji: '⚡' },
+      { id: 'carroceria', name: 'Carroceria', newPrice: 3000, repairPerPct: 24, kmPerPct: 16.5, imageFile: 'peca_carroceria.png', emoji: '🚘' },
+      { id: 'exaustao', name: 'Exaustão e Alimentação', newPrice: 3400, repairPerPct: 26, kmPerPct: 13.8, imageFile: 'peca_exaustao.png', emoji: '🔥' }
+    ];
+
+    const TRACKS_DATA = [
+      {
+        id: 'interlagos',
+        name: 'Autódromo de Interlagos',
+        city: 'São Paulo - SP',
+        laps: 35,
+        lapKm: 4.309,
+        totalKm: 150.8,
+        baseLapSec: 94.0,
+        straightWeight: 0.52,
+        cornerWeight: 0.48,
+        tireMultAll: 1.0,
+        tireMultSlick: 1.0,
+        partWearMult: 1.0,
+        desc: 'Subidas e descidas icônicas, curvas de alta e o S do Senna exigindo equilíbrio total.',
+        tips: 'Equilíbrio geral entre velocidade final na Reta Oposta e estabilidade no miolo.',
+        layoutPoints: [
+          [0.48, 0.14], [0.22, 0.14], [0.16, 0.24], [0.23, 0.32], [0.14, 0.44],
+          [0.14, 0.72], [0.26, 0.84], [0.46, 0.78], [0.42, 0.56], [0.58, 0.48],
+          [0.64, 0.66], [0.54, 0.78], [0.68, 0.88], [0.85, 0.76], [0.86, 0.44],
+          [0.74, 0.22]
+        ]
+      },
+      {
+        id: 'taruma',
+        name: 'Autódromo de Tarumã',
+        city: 'Viamão - RS',
+        laps: 45,
+        lapKm: 3.039,
+        totalKm: 136.8,
+        baseLapSec: 71.5,
+        straightWeight: 0.58,
+        cornerWeight: 0.42,
+        tireMultAll: 1.25,
+        tireMultSlick: 1.0,
+        partWearMult: 1.12,
+        desc: 'Curvas de altíssima velocidade com fortes cargas laterais (Curva do Tala Larga).',
+        tips: 'Desgaste de pneus 25% maior! Considere pneus mais duráveis ou parada extra.',
+        layoutPoints: [
+          [0.50, 0.16], [0.22, 0.16], [0.13, 0.34], [0.18, 0.64], [0.36, 0.84],
+          [0.54, 0.72], [0.64, 0.84], [0.84, 0.74], [0.87, 0.42], [0.76, 0.18]
+        ]
+      },
+      {
+        id: 'cascavel',
+        name: 'Autódromo Zilmar Beux',
+        city: 'Cascavel - PR',
+        laps: 40,
+        lapKm: 3.058,
+        totalKm: 122.3,
+        baseLapSec: 73.0,
+        straightWeight: 0.44,
+        cornerWeight: 0.56,
+        tireMultAll: 1.05,
+        tireMultSlick: 1.0,
+        partWearMult: 1.05,
+        desc: 'O famoso Bacião em descida exige coragem, estabilidade lateral e freios impecáveis.',
+        tips: 'Mantenha o Sistema de Freios acima de 80% antes da largada.',
+        layoutPoints: [
+          [0.52, 0.15], [0.20, 0.17], [0.14, 0.45], [0.24, 0.78], [0.48, 0.85],
+          [0.56, 0.60], [0.70, 0.78], [0.86, 0.64], [0.83, 0.30], [0.70, 0.16]
+        ]
+      },
+      {
+        id: 'curitiba',
+        name: 'Autódromo Internacional de Curitiba',
+        city: 'Pinhais - PR',
+        laps: 38,
+        lapKm: 3.695,
+        totalKm: 140.4,
+        baseLapSec: 84.5,
+        straightWeight: 0.68,
+        cornerWeight: 0.32,
+        tireMultAll: 1.0,
+        tireMultSlick: 1.0,
+        partWearMult: 1.08,
+        desc: 'Reta principal extensa de quase 1 km favorece motores de alta potência e torque.',
+        tips: 'Motores Aspirado ou Turbo e carros fortes de reta fazem grande diferença aqui.',
+        layoutPoints: [
+          [0.52, 0.14], [0.14, 0.14], [0.12, 0.36], [0.26, 0.52], [0.16, 0.74],
+          [0.34, 0.86], [0.54, 0.68], [0.68, 0.84], [0.86, 0.70], [0.88, 0.24],
+          [0.78, 0.14]
+        ]
+      },
+      {
+        id: 'goiania',
+        name: 'Autódromo Ayrton Senna',
+        city: 'Goiânia - GO',
+        laps: 42,
+        lapKm: 3.835,
+        totalKm: 161.1,
+        baseLapSec: 87.0,
+        straightWeight: 0.64,
+        cornerWeight: 0.36,
+        tireMultAll: 1.05,
+        tireMultSlick: 1.25,
+        partWearMult: 1.06,
+        desc: 'Asfalto abrasivo, retas velozes e temperaturas elevadas castigam pneus macios.',
+        tips: 'Pneus Slick sofrem 25% mais desgaste devido ao calor do cerrado.',
+        layoutPoints: [
+          [0.50, 0.15], [0.16, 0.15], [0.13, 0.42], [0.28, 0.54], [0.46, 0.48],
+          [0.36, 0.74], [0.56, 0.85], [0.84, 0.76], [0.87, 0.32], [0.76, 0.15]
+        ]
+      },
+      {
+        id: 'velocitta',
+        name: 'Autódromo Velocitta',
+        city: 'Mogi Guaçu - SP',
+        laps: 36,
+        lapKm: 3.493,
+        totalKm: 125.7,
+        baseLapSec: 86.0,
+        straightWeight: 0.32,
+        cornerWeight: 0.68,
+        tireMultAll: 1.12,
+        tireMultSlick: 1.0,
+        partWearMult: 1.15,
+        desc: 'Traçado técnico, travado e seletivo que decide o título nacional.',
+        tips: 'Favorece carros ágeis em curva e exige muito da Suspensão e habilidade do piloto.',
+        layoutPoints: [
+          [0.50, 0.14], [0.24, 0.16], [0.15, 0.32], [0.28, 0.44], [0.14, 0.62],
+          [0.26, 0.84], [0.48, 0.76], [0.52, 0.54], [0.68, 0.62], [0.64, 0.84],
+          [0.84, 0.80], [0.86, 0.46], [0.72, 0.34], [0.78, 0.18]
+        ]
+      }
+    ];
+
+    const POINTS_TABLE = [25, 18, 15, 12, 10, 8, 6, 4];
+    const PRIZE_TABLE = [15000, 10000, 7500, 5500, 4000, 3000, 2500, 2000];
+
+    const AI_DRIVERS_BASE = [
+      { id: 'ai1', name: 'Rubens Barrichello Jr.', carId: 'cobra', skill: 84, color: '#dc2626' },
+      { id: 'ai2', name: 'Ingo Hoffmann Neto', carId: 'cobra', skill: 82, color: '#f97316' },
+      { id: 'ai3', name: 'Cacá Bueno Filho', carId: 'planalto', skill: 80, color: '#2563eb' },
+      { id: 'ai4', name: 'Chico Serra II', carId: 'besouro', skill: 78, color: '#ca8a04' },
+      { id: 'ai5', name: 'Tony Kanaan Silva', carId: 'planalto', skill: 76, color: '#0891b2' },
+      { id: 'ai6', name: 'Paulo Gomes Neto', carId: 'besouro', skill: 74, color: '#16a34a' },
+      { id: 'ai7', name: 'Bia Figueiredo Costa', carId: 'cobra', skill: 72, color: '#9333ea' }
+    ];
+
+    // =====================================================================
+    // 2. ESTADO GLOBAL E PERSISTÊNCIA (LOCALSTORAGE)
+    // =====================================================================
+    function getDefaultGameState() {
+      return {
+        hasCareerStarted: false,
+        selectedCarId: 'cobra',
+        teamName: 'Equipe Bandeirante',
+        driverName: 'Ayrton Silva',
+        driverAge: 26,
+        driverGender: 'M',
+        driverAvatarIndex: 0,
+        driverSkill: 75,
+        cash: 50000,
+        stageIndex: 0,
+        activeEngine: 'normal',
+        ownedEngines: ['normal'],
+        partsHealth: {
+          motor_trans: 100,
+          suspensao: 100,
+          freios: 100,
+          eletrica: 100,
+          carroceria: 100,
+          exaustao: 100
+        },
+        tiresStock: {
+          band_seco: 1
+        },
+        usedTiresStock: [],
+        standings: [],
+        stageSchedule: [],
+        settings: {
+          sound: true,
+          simSpeed: 2
+        }
+      };
+    }
+
+    let gameState = getDefaultGameState();
+    let raceSession = null;
+    let raceIntervalId = null;
+    let raceAnimFrameId = null;
+    let lastPreparedStageIndex = -1;
+    const trackSplineCache = {};
+
+    function saveGameToStorage() {
+      try {
+        localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(gameState));
+      } catch (e) {}
+    }
+
+    function loadGameFromStorage() {
+      try {
+        const raw =
+          localStorage.getItem(SAVE_STORAGE_KEY) ||
+          localStorage.getItem('stock_gt3_brasil_manager_v10_save') ||
+          localStorage.getItem('stock_gt3_brasil_manager_v09_save') ||
+          localStorage.getItem('stock_gt3_brasil_manager_v08_save') ||
+          localStorage.getItem('stock_gt3_brasil_manager_v07_save');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.hasCareerStarted && Array.isArray(parsed.stageSchedule) && parsed.stageSchedule.length === TRACKS_DATA.length) {
+          gameState = {
+            ...getDefaultGameState(),
+            ...parsed,
+            partsHealth: { ...getDefaultGameState().partsHealth, ...(parsed.partsHealth || {}) },
+            tiresStock: { ...(parsed.tiresStock || {}) },
+            usedTiresStock: Array.isArray(parsed.usedTiresStock) ? parsed.usedTiresStock : [],
+            settings: { ...getDefaultGameState().settings, ...(parsed.settings || {}) }
+          };
+          // Garante que entradas antigas de IA em standings tenham campo skill persistido
+          gameState.standings.forEach((s) => {
+            if (!s.isPlayer && typeof s.skill !== 'number') {
+              const baseAi = AI_DRIVERS_BASE.find((a) => a.id === s.id);
+              s.skill = baseAi ? baseAi.skill : 76;
+            }
+          });
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    function generateTireUid() {
+      return 'ut_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function parseTireSelectionValue(val) {
+      if (!val || typeof val !== 'string') return null;
+      if (val.startsWith('new:')) {
+        const tireId = val.slice(4);
+        const tire = TIRE_CATALOG.find((t) => t.id === tireId);
+        return tire ? { kind: 'new', tireId, tire, health: 100 } : null;
+      }
+      if (val.startsWith('used:')) {
+        const uid = val.slice(5);
+        const usedItem = (gameState.usedTiresStock || []).find((u) => u.uid === uid);
+        if (!usedItem) return null;
+        const tire = TIRE_CATALOG.find((t) => t.id === usedItem.tireId);
+        return tire ? { kind: 'used', uid, tireId: usedItem.tireId, tire, health: usedItem.health } : null;
+      }
+      // Compatibilidade direta com ID puro
+      const tire = TIRE_CATALOG.find((t) => t.id === val);
+      return tire ? { kind: 'new', tireId: val, tire, health: 100 } : null;
+    }
+
+    function updateContinueButtonUI() {
+      const btn = document.getElementById('btn-continue-career');
+      const meta = document.getElementById('continue-career-meta');
+      if (!btn || !meta) return;
+
+      const hasSave = loadGameFromStorage();
+      if (hasSave) {
+        const stageDisp = Math.min(gameState.stageIndex + 1, TRACKS_DATA.length);
+        const statusTxt = gameState.stageIndex >= TRACKS_DATA.length ? 'Temporada Concluída' : `Etapa ${stageDisp}/${TRACKS_DATA.length}`;
+        meta.textContent = `${gameState.teamName} · ${statusTxt} · ${formatMoney(gameState.cash)}`;
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    }
+
+    function continueSavedCareer() {
+      if (!loadGameFromStorage()) {
+        showToast('Nenhum progresso salvo encontrado.');
+        return;
+      }
+      playBeep(780, 0.1);
+      lastPreparedStageIndex = -1;
+      showScreen('screen-main');
+      switchMainTab('tab-garage');
+      showToast(`Carreira de ${gameState.teamName} carregada!`);
+    }
+
+    function backToTitleScreen() {
+      if (raceSession && raceSession.running) {
+        showToast('Conclua ou abandone a corrida antes de voltar à capa!');
+        return;
+      }
+      updateContinueButtonUI();
+      showScreen('screen-title');
+      revealTitleAndButtons();
+    }
+
+    // =====================================================================
+    // 3. UTILITÁRIOS (MOEDA, TEMPO, SOM, FÍSICA DE CHASSI, MODAIS)
+    // =====================================================================
+    function formatMoney(val) {
+      return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatTime(sec) {
+      if (!isFinite(sec) || sec < 0) return '--:--,--';
+      const mins = Math.floor(sec / 60);
+      const rem = (sec % 60).toFixed(2).padStart(5, '0').replace('.', ',');
+      return `${mins}:${rem}`;
+    }
+
+    function getCarChassisTrackFactor(car, track) {
+      if (!car || !track) return 1.0;
+      const sWeight = track.straightWeight !== undefined ? track.straightWeight : 0.5;
+      const cWeight = track.cornerWeight !== undefined ? track.cornerWeight : 0.5;
+      return (car.straightBonus * sWeight) + (car.cornerPenalty * cWeight);
+    }
+
+    function playBeep(freq = 520, duration = 0.08, type = 'square') {
+      if (!gameState.settings.sound) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById('toast-banner');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+    }
+
+    function showScreen(screenId) {
+      ['screen-title', 'screen-car-select', 'screen-driver-setup', 'screen-main'].forEach((id) => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function openOptionsModal() {
+      document.getElementById('opt-sound-effects').checked = gameState.settings.sound;
+      document.getElementById('opt-default-sim-speed').value = String(gameState.settings.simSpeed);
+      document.getElementById('modal-backdrop').classList.remove('hidden');
+      document.getElementById('modal-options').classList.remove('hidden');
+      document.getElementById('modal-credits').classList.add('hidden');
+      document.getElementById('modal-podium').classList.add('hidden');
+    }
+
+    function openCreditsModal() {
+      document.getElementById('modal-backdrop').classList.remove('hidden');
+      document.getElementById('modal-credits').classList.remove('hidden');
+      document.getElementById('modal-options').classList.add('hidden');
+      document.getElementById('modal-podium').classList.add('hidden');
+    }
+
+    function closeModal() {
+      gameState.settings.sound = document.getElementById('opt-sound-effects').checked;
+      gameState.settings.simSpeed = parseInt(document.getElementById('opt-default-sim-speed').value, 10) || 2;
+      if (gameState.hasCareerStarted) saveGameToStorage();
+      document.getElementById('modal-backdrop').classList.add('hidden');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'modal-backdrop') closeModal();
+    }
+
+    function resetEntireSave() {
+      closeModal();
+      stopRaceLoops();
+      raceSession = null;
+      lastPreparedStageIndex = -1;
+      try {
+        localStorage.removeItem(SAVE_STORAGE_KEY);
+        localStorage.removeItem('stock_gt3_brasil_manager_v09_save');
+        localStorage.removeItem('stock_gt3_brasil_manager_v08_save');
+        localStorage.removeItem('stock_gt3_brasil_manager_v07_save');
+      } catch (e) {}
+      const savedSettings = { ...gameState.settings };
+      gameState = getDefaultGameState();
+      gameState.settings = savedSettings;
+      updateContinueButtonUI();
+      showScreen('screen-title');
+      revealTitleAndButtons();
+      showToast('Carreira e progresso salvo resetados!');
+    }
+
+    // =====================================================================
+    // 4. PREPARAÇÃO: ESCOLHA DE CARRO E CADASTRO DO PILOTO / EQUIPE
+    // =====================================================================
+    function getSelectedDriverPortraitFile() {
+      const list = DRIVER_PORTRAIT_FILES[gameState.driverGender] || DRIVER_PORTRAIT_FILES.M;
+      const idx = ((gameState.driverAvatarIndex % list.length) + list.length) % list.length;
+      return list[idx];
+    }
+
+    function getDriverAvatarMap() {
+      const playerFile = getSelectedDriverPortraitFile();
+      const allFiles = [
+        ...DRIVER_PORTRAIT_FILES.M,
+        ...DRIVER_PORTRAIT_FILES.F
+      ];
+      const remaining = allFiles.filter((f) => f !== playerFile);
+      const map = { player: playerFile };
+      AI_DRIVERS_BASE.forEach((ai, i) => {
+        map[ai.id] = remaining[i % remaining.length];
+      });
+      return map;
+    }
+
+    function goToCarSelection() {
+      playBeep(660, 0.09);
+      renderCarSelectionCards();
+      showScreen('screen-car-select');
+    }
+
+    function renderCarSelectionCards() {
+      const container = document.getElementById('car-cards-container');
+      container.innerHTML = '';
+
+      Object.values(CARS_DATA).forEach((car) => {
+        const eng = car.engines.normal;
+        const isSel = gameState.selectedCarId === car.id;
+        const straightPct = ((1 - car.straightBonus) * 100).toFixed(1).replace('.', ',');
+        const cornerPct = ((1 - car.cornerPenalty) * 100).toFixed(1).replace('.', ',');
+        const straightTxt = car.straightBonus <= 1 ? `+${straightPct}% vel. reta` : `${straightPct}% vel. reta`;
+        const cornerTxt = car.cornerPenalty <= 1 ? `+${cornerPct}% curva` : `${cornerPct}% curva`;
+
+        const card = document.createElement('div');
+        card.className = `card selectable car-select-row ${isSel ? 'selected' : ''}`;
+        card.onclick = () => {
+          gameState.selectedCarId = car.id;
+          playBeep(580, 0.06);
+          renderCarSelectionCards();
+        };
+
+        card.innerHTML = `
+          <div class="car-img-slot">
+            <img src="${car.imageFile}" alt="${car.name}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="car-img-fallback" style="display:none;">
+              <span style="font-size:2rem;">🏎️</span>
+              <strong style="font-size:0.82rem; color:#e2e8f0;">${car.name}</strong>
+              <span class="car-img-filename-tag">${car.imageFile}</span>
+            </div>
+          </div>
+
+          <div class="car-info-col">
+            <div>
+              <div class="flex-between">
+                <h3 class="pixel-font" style="font-size:0.95rem; color:${car.color};">${car.name}</h3>
+                ${isSel ? '<span class="badge badge-amber">SELECIONADO</span>' : '<span class="badge" style="background:#0f172a; color:#94a3b8; border:1px solid #334155;">CLIQUE P/ ESCOLHER</span>'}
+              </div>
+              <div class="text-muted mt-1" style="font-size:0.82rem; font-weight:700;">${car.brand}</div>
+              <p class="mt-2" style="font-size:0.88rem; color:#cbd5e1; line-height:1.45;">${car.desc}</p>
+            </div>
+
+            <div class="mt-2" style="background:#0f172a; padding:10px 12px; border-radius:6px; border:1px solid #263147;">
+              <div class="stat-row"><span>Motor Base:</span><strong>${eng.hp} cv (${eng.name})</strong></div>
+              <div class="stat-row"><span>Velocidade Máx.:</span><strong>${eng.vmax} km/h</strong></div>
+              <div class="stat-row"><span>Aerodinâmica / Chassi:</span><strong class="text-gold">${straightTxt} · ${cornerTxt}</strong></div>
+              <div class="stat-row"><span>Consumo / Tanque:</span><strong class="text-sky">${eng.kmPerL.toFixed(1).replace('.', ',')} km/L · ${eng.tank} L</strong></div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function goToDriverSetup() {
+      playBeep(660, 0.09);
+      renderDriverPortraitPreview();
+      showScreen('screen-driver-setup');
+    }
+
+    function setDriverGender(gender) {
+      gameState.driverGender = gender;
+      gameState.driverAvatarIndex = 0;
+      document.getElementById('btn-gender-M').classList.toggle('active', gender === 'M');
+      document.getElementById('btn-gender-F').classList.toggle('active', gender === 'F');
+      playBeep(540, 0.06);
+      renderDriverPortraitPreview();
+    }
+
+    function cycleDriverAvatar(delta) {
+      const list = DRIVER_PORTRAIT_FILES[gameState.driverGender] || DRIVER_PORTRAIT_FILES.M;
+      gameState.driverAvatarIndex = (gameState.driverAvatarIndex + delta + list.length) % list.length;
+      playBeep(600, 0.05);
+      renderDriverPortraitPreview();
+    }
+
+    function renderDriverPortraitPreview() {
+      const box = document.getElementById('driver-portrait-preview');
+      const counter = document.getElementById('driver-avatar-counter');
+      const list = DRIVER_PORTRAIT_FILES[gameState.driverGender] || DRIVER_PORTRAIT_FILES.M;
+      const file = getSelectedDriverPortraitFile();
+      counter.textContent = `${gameState.driverAvatarIndex + 1} / ${list.length}`;
+
+      box.innerHTML = `
+        <img src="${file}" alt="Piloto"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="driver-portrait-fallback" style="display:none;">
+          <span style="font-size:2.4rem;">${gameState.driverGender === 'F' ? '👩‍🚀' : '👨‍🚀'}</span>
+          <strong style="font-size:0.78rem;">Opção ${gameState.driverAvatarIndex + 1}</strong>
+          <span style="font-family:monospace; font-size:0.72rem; background:#1e293b; color:#fbbf24; padding:3px 6px; border-radius:4px;">${file}</span>
+        </div>
+      `;
+    }
+
+    function confirmCareerStart() {
+      const teamInput = document.getElementById('input-team-name').value.trim();
+      const nameInput = document.getElementById('input-driver-name').value.trim();
+      const ageInput = parseInt(document.getElementById('input-driver-age').value, 10);
+
+      if (!teamInput) {
+        showToast('Digite o nome da sua equipe!');
+        return;
+      }
+      if (!nameInput) {
+        showToast('Digite o nome do seu piloto!');
+        return;
+      }
+      if (isNaN(ageInput) || ageInput < 18 || ageInput > 65) {
+        showToast('A idade do piloto deve ser entre 18 e 65 anos.');
+        return;
+      }
+
+      gameState.hasCareerStarted = true;
+      gameState.teamName = teamInput;
+      gameState.driverName = nameInput;
+      gameState.driverAge = ageInput;
+      gameState.driverSkill = 75;
+      gameState.cash = 50000;
+      gameState.stageIndex = 0;
+      gameState.activeEngine = 'normal';
+      gameState.ownedEngines = ['normal'];
+      gameState.tiresStock = { band_seco: 1 };
+      gameState.usedTiresStock = [];
+      lastPreparedStageIndex = -1;
+
+      PART_CATEGORIES.forEach((p) => {
+        gameState.partsHealth[p.id] = 100;
+      });
+
+      initChampionshipData();
+      saveGameToStorage();
+      playBeep(880, 0.14);
+      showScreen('screen-main');
+      switchMainTab('tab-garage');
+      showToast(`Bem-vindo à garagem da ${gameState.teamName}!`);
+    }
+
+    function initChampionshipData() {
+      const weatherTemplates = [
+        [{ from: 1, to: 99, weather: 'seca' }],
+        [
+          { from: 1, to: 14, weather: 'seca' },
+          { from: 15, to: 99, weather: 'mista' }
+        ],
+        [
+          { from: 1, to: 10, weather: 'seca' },
+          { from: 11, to: 24, weather: 'chuva' },
+          { from: 25, to: 99, weather: 'mista' }
+        ],
+        [{ from: 1, to: 99, weather: 'seca' }],
+        [
+          { from: 1, to: 12, weather: 'mista' },
+          { from: 13, to: 99, weather: 'chuva' }
+        ],
+        [
+          { from: 1, to: 16, weather: 'seca' },
+          { from: 17, to: 26, weather: 'mista' },
+          { from: 27, to: 99, weather: 'seca' }
+        ]
+      ];
+      for (let i = weatherTemplates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [weatherTemplates[i], weatherTemplates[j]] = [weatherTemplates[j], weatherTemplates[i]];
+      }
+
+      gameState.stageSchedule = TRACKS_DATA.map((t, idx) => {
+        const stints = weatherTemplates[idx]
+          .map((s) => ({
+            from: s.from,
+            to: Math.min(s.to, t.laps),
+            weather: s.weather
+          }))
+          .filter((s) => s.from <= t.laps);
+        stints[stints.length - 1].to = t.laps;
+
+        return {
+          trackId: t.id,
+          weather: stints[0].weather,
+          weatherForecast: stints,
+          completed: false,
+          winnerName: '-'
+        };
+      });
+
+      const avatarMap = getDriverAvatarMap();
+      gameState.standings = [
+        {
+          id: 'player',
+          name: gameState.driverName,
+          carId: gameState.selectedCarId,
+          avatarFile: avatarMap.player,
+          points: 0,
+          wins: 0,
+          isPlayer: true
+        },
+        ...AI_DRIVERS_BASE.map((ai) => ({
+          id: ai.id,
+          name: ai.name,
+          carId: ai.carId,
+          avatarFile: avatarMap[ai.id],
+          points: 0,
+          wins: 0,
+          skill: ai.skill,
+          isPlayer: false
+        }))
+      ];
+    }
+
+    function startNewSeason() {
+      gameState.stageIndex = 0;
+      lastPreparedStageIndex = -1;
+      const previousAiSkills = {};
+      gameState.standings.forEach((s) => {
+        if (!s.isPlayer && typeof s.skill === 'number') {
+          previousAiSkills[s.id] = s.skill;
+        }
+      });
+      initChampionshipData();
+      gameState.standings.forEach((s) => {
+        if (!s.isPlayer && previousAiSkills[s.id] !== undefined) {
+          s.skill = previousAiSkills[s.id];
+        }
+      });
+      saveGameToStorage();
+      updateTopHud();
+      renderChampionshipView();
+      showToast('Nova temporada iniciada!');
+    }
+
+    // =====================================================================
+    // 5. NAVEGAÇÃO PRINCIPAL & HUD
+    // =====================================================================
+    function updateTopHud() {
+      document.getElementById('hud-team-name').textContent = gameState.teamName;
+      document.getElementById('hud-cash').textContent = formatMoney(gameState.cash);
+      const currentStageDisplay = Math.min(gameState.stageIndex + 1, TRACKS_DATA.length);
+      document.getElementById('hud-stage').textContent = `${currentStageDisplay} / ${TRACKS_DATA.length}`;
+      const playerEntry = gameState.standings.find((s) => s.isPlayer);
+      document.getElementById('hud-points').textContent = `${playerEntry ? playerEntry.points : 0} pts`;
+      document.getElementById('hud-skill').textContent = `${gameState.driverSkill}/100`;
+    }
+
+    function switchMainTab(tabId) {
+      if (raceSession && raceSession.running && tabId !== 'tab-race') {
+        showToast('Conclua ou abandone a corrida antes de sair da pista!');
+        return;
+      }
+
+      ['tab-garage', 'tab-shop', 'tab-prerace', 'tab-championship', 'tab-race'].forEach((id) => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+
+      updateTopHud();
+      if (tabId === 'tab-garage') renderGarageView();
+      if (tabId === 'tab-shop') renderShopView();
+      if (tabId === 'tab-prerace') renderPreRaceView();
+      if (tabId === 'tab-championship') renderChampionshipView();
+    }
+
+    // =====================================================================
+    // 6. GARAGEM & LOJA
+    // =====================================================================
+    function renderGarageView() {
+      const car = CARS_DATA[gameState.selectedCarId];
+      const eng = car.engines[gameState.activeEngine];
+      const portraitFile = getSelectedDriverPortraitFile();
+
+      document.getElementById('garage-team-heading').textContent = `GARAGEM DA EQUIPE "${gameState.teamName.toUpperCase()}"`;
+
+      const threeSquares = document.getElementById('garage-three-squares');
+      threeSquares.innerHTML = `
+        <div class="card">
+          <div class="flex-between mb-1">
+            <span class="pixel-font text-gold" style="font-size:0.72rem;">VEÍCULO TITULAR</span>
+            <span class="badge badge-amber">${car.brand}</span>
+          </div>
+          <div class="garage-car-preview">
+            <img src="${car.imageFile}" alt="${car.name}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+            <span style="display:none; font-size:2rem;">🏎️</span>
+          </div>
+          <strong style="font-size:1.05rem; color:${car.color};">${car.name}</strong>
+          <div class="stat-row mt-1"><span>Velocidade Máx.:</span><strong>${eng.vmax} km/h</strong></div>
+          <div class="stat-row"><span>Consumo:</span><strong class="text-sky">${eng.kmPerL.toFixed(1).replace('.', ',')} km/L</strong></div>
+          <div class="stat-row"><span>Capacidade Tanque:</span><strong class="text-green">${eng.tank} L</strong></div>
+        </div>
+
+        <div class="card">
+          <div class="flex-between mb-1">
+            <span class="pixel-font text-sky" style="font-size:0.72rem;">MOTOR INSTALADO</span>
+            <button class="btn btn-xs" onclick="switchMainTab('tab-shop')">Trocar / Comprar</button>
+          </div>
+          <strong style="font-size:1.05rem;">${eng.name}</strong>
+          <div class="stat-row mt-2"><span>Potência Atual:</span><strong class="text-gold">${eng.hp} cv</strong></div>
+          <div class="stat-row"><span>Motores na Garagem:</span><strong>${gameState.ownedEngines.length} / 3</strong></div>
+          <div class="mt-2" style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${gameState.ownedEngines.map((eKey) => `
+              <button class="btn btn-xs ${gameState.activeEngine === eKey ? 'btn-primary' : ''}" onclick="equipEngine('${eKey}')">
+                ${gameState.activeEngine === eKey ? '✓ ' : ''}${car.engines[eKey].name.split(' ')[0]}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="flex-between mb-1">
+            <span class="pixel-font" style="font-size:0.72rem; color:#d8b4fe;">PILOTO TITULAR</span>
+            <span class="badge badge-blue">${gameState.driverAge} anos</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+            <div style="width:68px; height:68px; border-radius:6px; overflow:hidden; border:2px solid #a855f7; background:#cbd5e1; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+              <img src="${portraitFile}" alt="${gameState.driverName}" style="width:100%; height:100%; object-fit:cover; image-rendering:pixelated;"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+              <span style="display:none; font-size:1.8rem;">${gameState.driverGender === 'F' ? '👩‍🚀' : '👨‍🚀'}</span>
+            </div>
+            <div style="flex:1;">
+              <strong style="font-size:1.05rem;">${gameState.driverName}</strong>
+              <div class="stat-row mt-1"><span>Habilidade / Moral:</span><strong class="text-green">${gameState.driverSkill} / 100</strong></div>
+              <div class="stat-row"><span>Fator de Ritmo:</span><strong>${(1 - (gameState.driverSkill - 50) * 0.0003).toFixed(4)}</strong></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const partsList = document.getElementById('garage-parts-list');
+      partsList.innerHTML = '';
+      PART_CATEGORIES.forEach((p) => {
+        const hp = Math.round(gameState.partsHealth[p.id]);
+        const missing = 100 - hp;
+        const repairCost = missing * p.repairPerPct;
+        const barColor = hp < 25 ? '#ef4444' : hp < 55 ? '#f59e0b' : '#22c55e';
+
+        const row = document.createElement('div');
+        row.className = 'part-row';
+        row.innerHTML = `
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="part-icon-box" title="${p.imageFile}">
+              <img src="${p.imageFile}" alt="${p.name}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+              <span style="display:none; font-size:1.1rem;">${p.emoji}</span>
+            </div>
+            <div>
+              <strong>${p.name}</strong>
+              ${hp < 25 ? '<span class="badge badge-red" style="margin-left:6px;">RISCO DE QUEBRA!</span>' : ''}
+            </div>
+          </div>
+          <div>
+            <div class="flex-between" style="font-size:0.8rem; margin-bottom:3px;">
+              <span>Integridade:</span>
+              <strong style="color:${barColor};">${hp}%</strong>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${hp}%; background:${barColor};"></div>
+            </div>
+          </div>
+          <div style="font-size:0.82rem;" class="text-muted">
+            ${missing > 0 ? `Custo p/ 100%: <strong class="text-gold">${formatMoney(repairCost)}</strong>` : '<span class="text-green">Em perfeitas condições</span>'}
+          </div>
+          <div style="text-align:right;">
+            <button class="btn btn-xs ${missing > 0 ? 'btn-gold' : ''}" ${missing === 0 ? 'disabled' : ''} onclick="repairSinglePart('${p.id}')">
+              Reparar
+            </button>
+          </div>
+        `;
+        partsList.appendChild(row);
+      });
+
+      const stockContainer = document.getElementById('garage-tires-stock');
+      stockContainer.innerHTML = '';
+      const ownedTireEntries = Object.entries(gameState.tiresStock).filter(([, qty]) => qty > 0);
+      const usedTires = gameState.usedTiresStock || [];
+
+      if (ownedTireEntries.length === 0 && usedTires.length === 0) {
+        stockContainer.innerHTML = '<p class="text-red">Nenhum jogo de pneus no estoque! Compre na Loja antes da corrida.</p>';
+      } else {
+        ownedTireEntries.forEach(([tId, qty]) => {
+          const t = TIRE_CATALOG.find((item) => item.id === tId);
+          if (!t) return;
+          const div = document.createElement('div');
+          div.style.cssText = 'background:#121722; padding:10px 12px; border-radius:6px; border:1px solid #2b364c; display:flex; justify-content:space-between; align-items:center;';
+          div.innerHTML = `
+            <div>
+              <strong>${t.label} <span class="text-green">(100%)</span></strong>
+              <div class="text-muted" style="font-size:0.78rem;">0 km · Seco: ${t.life.seca} km / Chuva: ${t.life.chuva} km</div>
+            </div>
+            <span class="badge badge-green">${qty} jogo(s)</span>
+          `;
+          stockContainer.appendChild(div);
+        });
+
+        usedTires.forEach((uItem) => {
+          const t = TIRE_CATALOG.find((item) => item.id === uItem.tireId);
+          if (!t) return;
+          const remSeco = Math.round((t.life.seca * uItem.health) / 100);
+          const remChuva = Math.round((t.life.chuva * uItem.health) / 100);
+          const badgeClass = uItem.health >= 45 ? 'badge-amber' : 'badge-red';
+          const div = document.createElement('div');
+          div.style.cssText = 'background:#121722; padding:10px 12px; border-radius:6px; border:1px solid #475569; display:flex; justify-content:space-between; align-items:center; gap:8px;';
+          div.innerHTML = `
+            <div>
+              <strong>♻️ ${t.label}</strong>
+              <div class="text-muted" style="font-size:0.78rem;">Semi-novo · Restante: ~${remSeco} km seco / ~${remChuva} km chuva</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+              <span class="badge ${badgeClass}">USADO ${uItem.health}%</span>
+              <button class="btn btn-xs" style="padding:4px 7px; font-size:0.72rem; color:#fca5a5;" onclick="discardUsedTire('${uItem.uid}')" title="Descartar jogo usado">✕</button>
+            </div>
+          `;
+          stockContainer.appendChild(div);
+        });
+      }
+    }
+
+    function discardUsedTire(uid) {
+      gameState.usedTiresStock = (gameState.usedTiresStock || []).filter((u) => u.uid !== uid);
+      saveGameToStorage();
+      playBeep(440, 0.06);
+      renderGarageView();
+      showToast('Jogo de pneus usado descartado da garagem.');
+    }
+
+    function repairSinglePart(partId) {
+      const part = PART_CATEGORIES.find((p) => p.id === partId);
+      const hp = Math.round(gameState.partsHealth[partId]);
+      const cost = (100 - hp) * part.repairPerPct;
+      if (cost <= 0) return;
+      if (gameState.cash < cost) {
+        showToast('Caixa insuficiente para este reparo!');
+        return;
+      }
+      gameState.cash -= cost;
+      gameState.partsHealth[partId] = 100;
+      saveGameToStorage();
+      playBeep(700, 0.08);
+      updateTopHud();
+      renderGarageView();
+      showToast(`${part.name} reparado para 100%!`);
+    }
+
+    function repairAllParts() {
+      let totalCost = 0;
+      PART_CATEGORIES.forEach((p) => {
+        const hp = Math.round(gameState.partsHealth[p.id]);
+        totalCost += (100 - hp) * p.repairPerPct;
+      });
+      if (totalCost === 0) {
+        showToast('Todas as peças já estão em 100%!');
+        return;
+      }
+      if (gameState.cash < totalCost) {
+        showToast(`Caixa insuficiente! Necessário ${formatMoney(totalCost)}.`);
+        return;
+      }
+      gameState.cash -= totalCost;
+      PART_CATEGORIES.forEach((p) => {
+        gameState.partsHealth[p.id] = 100;
+      });
+      saveGameToStorage();
+      playBeep(760, 0.12);
+      updateTopHud();
+      renderGarageView();
+      showToast(`Revisão geral concluída (-${formatMoney(totalCost)})!`);
+    }
+
+    function equipEngine(engineKey) {
+      if (!gameState.ownedEngines.includes(engineKey)) return;
+      gameState.activeEngine = engineKey;
+      saveGameToStorage();
+      playBeep(620, 0.07);
+      renderGarageView();
+      showToast('Motor equipado no veículo!');
+    }
+
+    function renderShopView() {
+      const car = CARS_DATA[gameState.selectedCarId];
+
+      const engContainer = document.getElementById('shop-engines-list');
+      engContainer.innerHTML = '';
+      Object.entries(car.engines).forEach(([key, eng]) => {
+        const owned = gameState.ownedEngines.includes(key);
+        const equipped = gameState.activeEngine === key;
+        const imgFile = ENGINE_IMAGES[key] || 'motor_normal.png';
+        const div = document.createElement('div');
+        div.className = `card ${equipped ? 'selected' : ''}`;
+        div.innerHTML = `
+          <div class="shop-item-img-box">
+            <img src="${imgFile}" alt="${eng.name}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="shop-item-img-fallback" style="display:none;">
+              <span style="font-size:1.9rem;">⚙️</span>
+              <span class="car-img-filename-tag">${imgFile}</span>
+            </div>
+          </div>
+          <div class="flex-between">
+            <strong class="text-gold">${eng.name}</strong>
+            ${equipped ? '<span class="badge badge-green">EQUIPADO</span>' : owned ? '<span class="badge badge-blue">ADQUIRIDO</span>' : ''}
+          </div>
+          <div class="stat-row mt-2"><span>Potência:</span><strong>${eng.hp} cv</strong></div>
+          <div class="stat-row"><span>Velocidade Máx.:</span><strong>${eng.vmax} km/h</strong></div>
+          <div class="stat-row"><span>Consumo:</span><strong class="text-sky">${eng.kmPerL.toFixed(1).replace('.', ',')} km/L</strong></div>
+          <div class="stat-row"><span>Tanque:</span><strong>${eng.tank} L</strong></div>
+          <div class="mt-2" style="text-align:right;">
+            ${
+              equipped
+                ? '<button class="btn btn-xs" disabled>Em Uso</button>'
+                : owned
+                ? `<button class="btn btn-blue btn-xs" onclick="equipEngine('${key}'); renderShopView();">Instalar</button>`
+                : `<button class="btn btn-gold btn-xs" onclick="buyEngine('${key}')">Comprar (${formatMoney(eng.price)})</button>`
+            }
+          </div>
+        `;
+        engContainer.appendChild(div);
+      });
+
+      const tiresContainer = document.getElementById('shop-tires-list');
+      tiresContainer.innerHTML = '';
+      TIRE_CATALOG.forEach((t) => {
+        const qty = gameState.tiresStock[t.id] || 0;
+        const typeBadge = t.type === 'seco' ? 'badge-amber' : t.type === 'misto' ? 'badge-green' : 'badge-blue';
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div class="shop-item-img-box">
+            <img src="${t.imageFile}" alt="${t.label}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="shop-item-img-fallback" style="display:none;">
+              <span style="font-size:1.9rem;">🛞</span>
+              <span class="car-img-filename-tag">${t.imageFile}</span>
+            </div>
+          </div>
+          <div class="flex-between">
+            <strong>${t.label}</strong>
+            <span class="badge ${typeBadge}">${t.type.toUpperCase()}</span>
+          </div>
+          <div class="text-muted mt-1" style="font-size:0.78rem;">${t.brand} · Estoque: <strong>${qty}</strong></div>
+          <div class="stat-row mt-1">
+            <span>Vida útil (Seco / Misto / Chuva):</span>
+            <strong>☀️ ${t.life.seca} / ⛅ ${t.life.mista} / 🌧️ ${t.life.chuva} km</strong>
+          </div>
+          <div class="mt-2 flex-between">
+            <strong class="text-green">${formatMoney(t.price)}</strong>
+            <button class="btn btn-primary btn-xs" onclick="buyTire('${t.id}')">+ Comprar Jogo</button>
+          </div>
+        `;
+        tiresContainer.appendChild(div);
+      });
+
+      const partsContainer = document.getElementById('shop-parts-list');
+      partsContainer.innerHTML = '';
+      PART_CATEGORIES.forEach((p) => {
+        const hp = Math.round(gameState.partsHealth[p.id]);
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div class="flex-between">
+            <strong>${p.emoji} ${p.name}</strong>
+            <span class="text-muted" style="font-size:0.8rem;">Atual: ${hp}%</span>
+          </div>
+          <div class="mt-2 flex-between">
+            <strong class="text-gold">${formatMoney(p.newPrice)}</strong>
+            <button class="btn btn-gold btn-xs" ${hp === 100 ? 'disabled' : ''} onclick="buyNewPart('${p.id}')">Instalar Nova (100%)</button>
+          </div>
+        `;
+        partsContainer.appendChild(div);
+      });
+    }
+
+    function buyEngine(key) {
+      const car = CARS_DATA[gameState.selectedCarId];
+      const eng = car.engines[key];
+      if (gameState.cash < eng.price) {
+        showToast('Saldo insuficiente para este motor!');
+        return;
+      }
+      gameState.cash -= eng.price;
+      gameState.ownedEngines.push(key);
+      gameState.activeEngine = key;
+      saveGameToStorage();
+      playBeep(820, 0.12);
+      updateTopHud();
+      renderShopView();
+      showToast(`Motor ${eng.name} comprado e instalado!`);
+    }
+
+    function buyTire(tireId) {
+      const t = TIRE_CATALOG.find((item) => item.id === tireId);
+      if (gameState.cash < t.price) {
+        showToast('Saldo insuficiente para comprar pneus!');
+        return;
+      }
+      gameState.cash -= t.price;
+      gameState.tiresStock[tireId] = (gameState.tiresStock[tireId] || 0) + 1;
+      saveGameToStorage();
+      playBeep(740, 0.08);
+      updateTopHud();
+      renderShopView();
+      showToast(`1 jogo de ${t.label} adicionado ao estoque!`);
+    }
+
+    function buyNewPart(partId) {
+      const p = PART_CATEGORIES.find((item) => item.id === partId);
+      if (gameState.cash < p.newPrice) {
+        showToast('Saldo insuficiente!');
+        return;
+      }
+      gameState.cash -= p.newPrice;
+      gameState.partsHealth[partId] = 100;
+      saveGameToStorage();
+      playBeep(740, 0.08);
+      updateTopHud();
+      renderShopView();
+      showToast(`${p.name} substituído por peça 0 km!`);
+    }
+
+    // =====================================================================
+    // 7. PRÉ-CORRIDA & ESTRATÉGIA MODULAR (PNEU E/OU COMBUSTÍVEL)
+    // =====================================================================
+    function formatWeatherForecastHtml(stints) {
+      if (!stints || stints.length === 0) return '☀️ Pista Seca';
+      const labels = {
+        seca: '☀️ Pista Seca',
+        mista: '⛅ Pista Mista',
+        chuva: '🌧️ Pista Molhada'
+      };
+      return stints
+        .map((s) => `<span style="display:inline-block; background:#0f172a; border:1px solid #334155; padding:3px 8px; border-radius:4px; margin:2px 0 2px 4px; font-size:0.8rem;">Voltas ${s.from} a ${s.to}: <strong>${labels[s.weather] || s.weather}</strong></span>`)
+        .join(' ');
+    }
+
+    function getForecastWeatherForLap(sched, lapNum) {
+      if (!sched || !sched.weatherForecast || sched.weatherForecast.length === 0) {
+        return sched ? sched.weather : 'seca';
+      }
+      const match = sched.weatherForecast.find((s) => lapNum >= s.from && lapNum <= s.to);
+      return match ? match.weather : sched.weatherForecast[sched.weatherForecast.length - 1].weather;
+    }
+
+    function calcTireLapAutonomy(tire, track, healthPct = 100) {
+      if (!tire || !track) return { seca: 0, mista: 0, chuva: 0, adjKmSeca: 0, adjKmMista: 0, adjKmChuva: 0, trackPenaltyPct: 0 };
+      const ratio = Math.max(0, Math.min(100, healthPct)) / 100;
+      const mult = track.tireMultAll * (tire.type === 'seco' ? track.tireMultSlick : 1.0);
+      const calcFor = (cond) => {
+        const nominalLifeKm = (tire.type === 'chuva' && cond === 'seca' ? track.lapKm * 2 : tire.life[cond]) * ratio;
+        const effectiveKm = nominalLifeKm / mult;
+        return {
+          laps: Math.max(1, Math.floor(effectiveKm / track.lapKm)),
+          effKm: Math.round(effectiveKm)
+        };
+      };
+      const s = calcFor('seca');
+      const m = calcFor('mista');
+      const c = calcFor('chuva');
+      return {
+        seca: s.laps,
+        mista: m.laps,
+        chuva: c.laps,
+        adjKmSeca: s.effKm,
+        adjKmMista: m.effKm,
+        adjKmChuva: c.effKm,
+        trackPenaltyPct: Math.round((mult - 1) * 100)
+      };
+    }
+
+    function syncStrategyTireSelects(isNewStageSetup = false) {
+      const pit1On = document.getElementById('strat-pit1-on').checked;
+      const pit1ChangeTire = document.getElementById('strat-pit1-change-tire').checked;
+      const pit2On = document.getElementById('strat-pit2-on').checked;
+      const pit2ChangeTire = document.getElementById('strat-pit2-change-tire').checked;
+
+      // Reserva apenas se a parada estiver ativa E "Trocar Pneus" estiver marcado
+      const slots = [
+        { id: 'strat-start-tire', active: true },
+        { id: 'strat-pit1-tire', active: pit1On && pit1ChangeTire },
+        { id: 'strat-pit2-tire', active: pit2On && pit2ChangeTire }
+      ];
+
+      const remainingNewStock = { ...gameState.tiresStock };
+      const reservedUsedUids = new Set();
+      const allUsedTires = [...(gameState.usedTiresStock || [])].sort((a, b) => b.health - a.health);
+
+      slots.forEach((slot) => {
+        const sel = document.getElementById(slot.id);
+        if (!sel) return;
+
+        const prevValue = sel.value;
+        sel.innerHTML = '';
+
+        const optionsList = [];
+
+        // 1. Jogos 0 km (100%)
+        TIRE_CATALOG.forEach((t) => {
+          const qty = remainingNewStock[t.id] || 0;
+          if (qty > 0) {
+            optionsList.push({
+              value: `new:${t.id}`,
+              label: `${t.label} — 100% (${qty} novo${qty > 1 ? 's' : ''})`
+            });
+          }
+        });
+
+        // 2. Jogos Semi-Novos reaproveitados
+        allUsedTires.forEach((uItem) => {
+          if (reservedUsedUids.has(uItem.uid)) return;
+          const t = TIRE_CATALOG.find((item) => item.id === uItem.tireId);
+          if (t) {
+            optionsList.push({
+              value: `used:${uItem.uid}`,
+              label: `♻️ ${t.label} [Usado ${uItem.health}%]`
+            });
+          }
+        });
+
+        if (optionsList.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Sem pneus livres no estoque!';
+          sel.appendChild(opt);
+          sel.value = '';
+          return;
+        }
+
+        optionsList.forEach((o) => {
+          const opt = document.createElement('option');
+          opt.value = o.value;
+          opt.textContent = o.label;
+          sel.appendChild(opt);
+        });
+
+        if (!isNewStageSetup && optionsList.some((o) => o.value === prevValue)) {
+          sel.value = prevValue;
+        } else {
+          sel.selectedIndex = 0;
+        }
+
+        if (slot.active && sel.value) {
+          if (sel.value.startsWith('new:')) {
+            const tId = sel.value.slice(4);
+            if (remainingNewStock[tId] > 0) remainingNewStock[tId] -= 1;
+          } else if (sel.value.startsWith('used:')) {
+            reservedUsedUids.add(sel.value.slice(5));
+          }
+        }
+      });
+    }
+
+    function togglePitActionFields(pitNum) {
+      const changeTire = document.getElementById(`strat-pit${pitNum}-change-tire`).checked;
+      const refuel = document.getElementById(`strat-pit${pitNum}-refuel`).checked;
+
+      const tireFields = document.getElementById(`pit${pitNum}-tire-fields`);
+      const fuelFields = document.getElementById(`pit${pitNum}-fuel-fields`);
+
+      if (tireFields) {
+        tireFields.style.opacity = changeTire ? '1' : '0.35';
+        tireFields.style.pointerEvents = changeTire ? 'auto' : 'none';
+      }
+      if (fuelFields) {
+        fuelFields.style.opacity = refuel ? '1' : '0.35';
+        fuelFields.style.pointerEvents = refuel ? 'auto' : 'none';
+      }
+
+      updateStrategyCalc();
+    }
+
+    function renderPreRaceView() {
+      if (gameState.stageIndex >= TRACKS_DATA.length) {
+        document.getElementById('prerace-season-done').classList.remove('hidden');
+        document.getElementById('prerace-main-panel').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('prerace-season-done').classList.add('hidden');
+      document.getElementById('prerace-main-panel').classList.remove('hidden');
+
+      const sched = gameState.stageSchedule[gameState.stageIndex];
+      const track = TRACKS_DATA[gameState.stageIndex];
+      const car = CARS_DATA[gameState.selectedCarId];
+      const eng = car.engines[gameState.activeEngine];
+      const isNewStageSetup = lastPreparedStageIndex !== gameState.stageIndex;
+      lastPreparedStageIndex = gameState.stageIndex;
+
+      document.getElementById('pre-stage-num').textContent = gameState.stageIndex + 1;
+      document.getElementById('pre-track-title').textContent = `${track.name} (${track.city})`;
+      document.getElementById('pre-weather-badge').innerHTML = formatWeatherForecastHtml(sched.weatherForecast);
+
+      const kmPerLap = (track.totalKm / track.laps).toFixed(2).replace('.', ',');
+      const chassisFactor = getCarChassisTrackFactor(car, track);
+      const chassisDiffPct = ((1 - chassisFactor) * 100);
+      const chassisLabel = chassisDiffPct >= 0
+        ? `<span class="text-green">+${chassisDiffPct.toFixed(1).replace('.', ',')}% favorável ao ${car.name}</span>`
+        : `<span class="text-amber">${chassisDiffPct.toFixed(1).replace('.', ',')}% exigente p/ ${car.name}</span>`;
+
+      document.getElementById('pre-track-meta').textContent = `${track.laps} voltas · ${track.totalKm.toFixed(1).replace('.', ',')} km · ${kmPerLap} km/volta`;
+      document.getElementById('pre-track-desc').textContent = track.desc;
+      document.getElementById('pre-track-tips').innerHTML = `💡 <strong>Dica do Engenheiro:</strong> ${track.tips} <span style="margin-left:6px;">(Encaixe do Chassi: ${chassisLabel})</span>`;
+
+      const miniCanvas = document.getElementById('prerace-minimap-canvas');
+      if (miniCanvas) {
+        renderTrackCircuitScene(miniCanvas, track, sched.weather, [], true);
+      }
+
+      const fuelSlider = document.getElementById('strat-start-fuel');
+      fuelSlider.max = eng.tank;
+      if (isNewStageSetup || parseInt(fuelSlider.value, 10) > eng.tank) {
+        fuelSlider.value = eng.tank;
+      }
+
+      const defaultPitFuel = {
+        'strat-pit1-fuel': Math.min(eng.tank, 35),
+        'strat-pit2-fuel': Math.min(eng.tank, 25)
+      };
+
+      ['strat-pit1-fuel', 'strat-pit2-fuel'].forEach((pitFuelId) => {
+        const pitSlider = document.getElementById(pitFuelId);
+        if (pitSlider) {
+          pitSlider.max = eng.tank;
+          if (isNewStageSetup || parseInt(pitSlider.value, 10) > eng.tank) {
+            pitSlider.value = defaultPitFuel[pitFuelId];
+          }
+        }
+      });
+
+      if (isNewStageSetup) {
+        [1, 2].forEach((pitNum) => {
+          const chk = document.getElementById(`strat-pit${pitNum}-on`);
+          const body = document.getElementById(`pit${pitNum}-body`);
+          const chkTire = document.getElementById(`strat-pit${pitNum}-change-tire`);
+          const chkFuel = document.getElementById(`strat-pit${pitNum}-refuel`);
+          if (chk) chk.checked = false;
+          if (chkTire) chkTire.checked = true;
+          if (chkFuel) chkFuel.checked = true;
+          if (body) {
+            body.style.opacity = '0.45';
+            body.style.pointerEvents = 'none';
+          }
+          togglePitActionFields(pitNum);
+        });
+        document.getElementById('strat-pit1-lap').value = Math.max(2, Math.floor(track.laps * 0.45));
+        document.getElementById('strat-pit2-lap').value = Math.max(3, Math.floor(track.laps * 0.75));
+      }
+
+      const pit1LapInp = document.getElementById('strat-pit1-lap');
+      if (pit1LapInp) pit1LapInp.oninput = updateStrategyCalc;
+
+      syncStrategyTireSelects(isNewStageSetup);
+      updateStrategyCalc();
+    }
+
+    function togglePitPlan(num) {
+      const checked = document.getElementById(`strat-pit${num}-on`).checked;
+      const body = document.getElementById(`pit${num}-body`);
+      body.style.opacity = checked ? '1' : '0.45';
+      body.style.pointerEvents = checked ? 'auto' : 'none';
+      if (checked) togglePitActionFields(num);
+      updateStrategyCalc();
+    }
+
+    function updateStrategyCalc() {
+      const track = TRACKS_DATA[gameState.stageIndex];
+      const sched = gameState.stageSchedule[gameState.stageIndex];
+      const car = CARS_DATA[gameState.selectedCarId];
+      const eng = car.engines[gameState.activeEngine];
+      if (!track || !sched) return;
+
+      syncStrategyTireSelects(false);
+
+      const startFuel = parseInt(document.getElementById('strat-start-fuel').value, 10) || 50;
+      document.getElementById('strat-fuel-val').textContent = `${startFuel} L`;
+      const estKmStart = startFuel * eng.kmPerL;
+      const estLapsStart = Math.floor(estKmStart / track.lapKm);
+      document.getElementById('strat-fuel-autonomy').textContent =
+        `Autonomia do Tanque: ~${estLapsStart} voltas (${Math.round(estKmStart)} km)`;
+
+      const pit1On = document.getElementById('strat-pit1-on').checked;
+      const pit1ChangeTire = document.getElementById('strat-pit1-change-tire').checked;
+      const pit1Refuel = document.getElementById('strat-pit1-refuel').checked;
+      const pit1Lap = Math.max(2, parseInt(document.getElementById('strat-pit1-lap').value, 10) || 15);
+
+      const pit2On = document.getElementById('strat-pit2-on').checked;
+      const pit2ChangeTire = document.getElementById('strat-pit2-change-tire').checked;
+      const pit2Refuel = document.getElementById('strat-pit2-refuel').checked;
+      const pit2Lap = Math.max(3, parseInt(document.getElementById('strat-pit2-lap').value, 10) || 25);
+
+      // Cálculo aditivo de combustível considerando sobra estimada do stint anterior
+      const litersPerLap = track.lapKm / eng.kmPerL;
+      const pit1AddFuel = parseInt(document.getElementById('strat-pit1-fuel').value, 10) || 30;
+      const pit2AddFuel = parseInt(document.getElementById('strat-pit2-fuel').value, 10) || 25;
+
+      const fuelAtPit1Arrival = Math.max(0, startFuel - (pit1Lap - 1) * litersPerLap);
+      const fuelAfterPit1 = pit1On && pit1Refuel
+        ? Math.min(eng.tank, fuelAtPit1Arrival + pit1AddFuel)
+        : fuelAtPit1Arrival;
+
+      const lapsBetweenPit1And2 = Math.max(0, pit2Lap - pit1Lap);
+      const fuelAtPit2Arrival = Math.max(0, fuelAfterPit1 - lapsBetweenPit1And2 * litersPerLap);
+      const fuelAfterPit2 = pit2On && pit2Refuel
+        ? Math.min(eng.tank, fuelAtPit2Arrival + pit2AddFuel)
+        : fuelAtPit2Arrival;
+
+      [
+        {
+          pitNum: 1,
+          addVal: pit1AddFuel,
+          remBefore: fuelAtPit1Arrival,
+          totalAfter: Math.min(eng.tank, fuelAtPit1Arrival + pit1AddFuel)
+        },
+        {
+          pitNum: 2,
+          addVal: pit2AddFuel,
+          remBefore: fuelAtPit2Arrival,
+          totalAfter: Math.min(eng.tank, fuelAtPit2Arrival + pit2AddFuel)
+        }
+      ].forEach(({ pitNum, addVal, remBefore, totalAfter }) => {
+        const pitValEl = document.getElementById(`strat-pit${pitNum}-fuel-val`);
+        const pitAutoEl = document.getElementById(`strat-pit${pitNum}-autonomy`);
+        if (pitValEl && pitAutoEl) {
+          pitValEl.textContent = `+${addVal} L`;
+          const addedLaps = Math.floor((addVal * eng.kmPerL) / track.lapKm);
+          const totalLapsAfter = Math.floor((totalAfter * eng.kmPerL) / track.lapKm);
+          const overflowWarn = remBefore + addVal > eng.tank ? ` <span class="text-amber">(teto ${eng.tank}L)</span>` : '';
+          pitAutoEl.innerHTML =
+            `+${addVal} L (~${addedLaps}v) + sobra est. ${remBefore.toFixed(1)}L = <strong class="text-green">${totalAfter.toFixed(1)}L (~${totalLapsAfter}v)</strong>${overflowWarn}`;
+        }
+      });
+
+      [
+        { selId: 'strat-start-tire', outId: 'strat-start-tire-autonomy', active: true },
+        { selId: 'strat-pit1-tire', outId: 'strat-pit1-tire-autonomy', active: pit1ChangeTire },
+        { selId: 'strat-pit2-tire', outId: 'strat-pit2-tire-autonomy', active: pit2ChangeTire }
+      ].forEach(({ selId, outId, active }) => {
+        const sel = document.getElementById(selId);
+        const out = document.getElementById(outId);
+        if (!sel || !out) return;
+        if (!active) {
+          out.innerHTML = '<span class="text-muted">Mantém o jogo de pneus atual na pista</span>';
+          return;
+        }
+        const parsed = parseTireSelectionValue(sel.value);
+        if (!parsed) {
+          out.innerHTML = '<span class="text-red">Sem pneu livre para este stint</span>';
+        } else {
+          const auto = calcTireLapAutonomy(parsed.tire, track, parsed.health);
+          const healthTag = parsed.kind === 'used' ? ` <span class="text-amber">(${parsed.health}%)</span>` : '';
+          const trackModTag = auto.trackPenaltyPct > 0
+            ? `<div style="font-size:0.68rem; color:#94a3b8; margin-top:2px;">⚠️ Abrasividade da pista (+${auto.trackPenaltyPct}% desgaste): reduz km nominal da Loja</div>`
+            : '';
+          out.innerHTML = `Autonomia Pneu${healthTag}: <strong class="text-gold">☀️ ~${auto.seca}v (${auto.adjKmSeca}km)</strong> · <strong class="text-sky">⛅ ~${auto.mista}v (${auto.adjKmMista}km)</strong> · <strong class="text-green">🌧️ ~${auto.chuva}v (${auto.adjKmChuva}km)</strong>${trackModTag}`;
+        }
+      });
+
+      const warnings = [];
+      const startTireVal = document.getElementById('strat-start-tire').value;
+      const startParsed = parseTireSelectionValue(startTireVal);
+      const startTire = startParsed ? startParsed.tire : null;
+      const lap1Weather = getForecastWeatherForLap(sched, 1);
+
+      if (!startTire) {
+        warnings.push('<span class="text-red">⚠️ Você precisa comprar pelo menos 1 jogo de pneus na Loja!</span>');
+      } else {
+        if (lap1Weather === 'chuva' && startTire.type === 'seco') {
+          warnings.push('<span class="text-red">🌧️ Alerta: Pneu SLICK na largada molhada perderá até 15% de ritmo por volta!</span>');
+        }
+        if (lap1Weather === 'seca' && startTire.type === 'chuva') {
+          warnings.push('<span class="text-amber">☀️ Alerta: Pneu de CHUVA no asfalto seco superaquece e estoura em poucas voltas!</span>');
+        }
+      }
+
+      if (pit1On && !pit1ChangeTire && !pit1Refuel) {
+        warnings.push('<span class="text-red">⚠️ Parada 1 ativa sem ação! Marque Trocar Pneus, Adicionar Combustível ou ambos.</span>');
+      }
+      if (pit2On && !pit2ChangeTire && !pit2Refuel) {
+        warnings.push('<span class="text-red">⚠️ Parada 2 ativa sem ação! Marque Trocar Pneus, Adicionar Combustível ou ambos.</span>');
+      }
+
+      if (pit1On && pit1ChangeTire && !document.getElementById('strat-pit1-tire').value) {
+        warnings.push('<span class="text-red">⚠️ Parada 1 configurada para trocar pneus, mas não há jogo livre no estoque!</span>');
+      }
+      if (pit2On && pit2ChangeTire && !document.getElementById('strat-pit2-tire').value) {
+        warnings.push('<span class="text-red">⚠️ Parada 2 configurada para trocar pneus, mas não há jogo livre no estoque!</span>');
+      }
+
+      const totalPlannedFuel =
+        startFuel +
+        (pit1On && pit1Refuel ? pit1AddFuel : 0) +
+        (pit2On && pit2Refuel ? pit2AddFuel : 0);
+      const totalPlannedLaps = Math.floor((totalPlannedFuel * eng.kmPerL) / track.lapKm);
+
+      if (totalPlannedLaps < track.laps) {
+        warnings.push(`<span class="text-amber">⛽ Atenção: Combustível total planejado (${totalPlannedFuel} L) cobre ~${totalPlannedLaps} voltas de ${track.laps}. Aumente a carga ou ative reabastecimento!</span>`);
+      }
+
+      const criticalParts = PART_CATEGORIES.filter((p) => gameState.partsHealth[p.id] < 30);
+      if (criticalParts.length > 0) {
+        warnings.push(`<span class="text-red">🔧 Peça(s) abaixo de 30% de integridade (${criticalParts.map((p) => p.name).join(', ')}). Alto risco de abandono!</span>`);
+      }
+
+      document.getElementById('strategy-warnings').innerHTML = warnings.join('<br/>');
+    }
+
+    // =====================================================================
+    // 8. CAMPEONATO (COM MINIATURAS DOS PILOTOS)
+    // =====================================================================
+    function renderChampionshipView() {
+      const sorted = [...gameState.standings].sort((a, b) => b.points - a.points || b.wins - a.wins);
+      const tbody = document.getElementById('champ-standings-body');
+      tbody.innerHTML = '';
+
+      sorted.forEach((s, idx) => {
+        const car = CARS_DATA[s.carId];
+        const tr = document.createElement('tr');
+        if (s.isPlayer) tr.className = 'row-player';
+        tr.innerHTML = `
+          <td><strong>${idx + 1}º</strong></td>
+          <td>
+            <div style="display:flex; align-items:center; gap:9px;">
+              <div style="width:32px; height:32px; border-radius:4px; overflow:hidden; border:1px solid ${s.isPlayer ? '#fbbf24' : '#475569'}; background:#cbd5e1; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                <img src="${s.avatarFile}" alt="${s.name}" style="width:100%; height:100%; object-fit:cover; image-rendering:pixelated;"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                <span style="display:none; font-size:0.9rem;">🏎️</span>
+              </div>
+              <div>
+                <strong>${s.name}</strong> ${s.isPlayer ? '<span class="badge badge-amber">VOCÊ</span>' : ''}
+              </div>
+            </div>
+          </td>
+          <td style="color:${car.color}; font-weight:700;">${car.name}</td>
+          <td>${s.wins}</td>
+          <td><strong class="text-gold">${s.points}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const calList = document.getElementById('champ-calendar-list');
+      calList.innerHTML = '';
+      gameState.stageSchedule.forEach((sched, idx) => {
+        const track = TRACKS_DATA[idx];
+        const isCurrent = idx === gameState.stageIndex && !sched.completed;
+        const wIcon = sched.weather === 'seca' ? '☀️' : sched.weather === 'mista' ? '⛅' : '🌧️';
+
+        const div = document.createElement('div');
+        div.style.cssText = `padding:9px 11px; border-radius:6px; margin-bottom:7px; border:1px solid ${isCurrent ? '#f59e0b' : '#263147'}; background:${isCurrent ? 'rgba(245,158,11,0.1)' : '#121722'};`;
+        div.innerHTML = `
+          <div class="flex-between">
+            <strong>Etapa ${idx + 1}: ${track.name}</strong>
+            <span>${wIcon} ${sched.completed ? `<span class="badge badge-green">Venc.: ${sched.winnerName}</span>` : isCurrent ? '<span class="badge badge-amber">PRÓXIMA</span>' : '<span class="text-muted">Aguardando</span>'}</span>
+          </div>
+          <div class="text-muted" style="font-size:0.78rem; margin-top:3px;">${track.city} · ${track.laps} voltas (${track.totalKm} km)</div>
+        `;
+        calList.appendChild(div);
+      });
+
+      const allDone = gameState.stageIndex >= TRACKS_DATA.length;
+      document.getElementById('btn-new-season').classList.toggle('hidden', !allDone);
+    }
+
+    // =====================================================================
+    // 9. SIMULAÇÃO DA CORRIDA AO VIVO (CURVA TÉRMICA PNEUS + BOX MODULAR)
+    // =====================================================================
+    /**
+     * Calcula o fator de ritmo do pneu com base na temperatura/desgaste:
+     * - 100% a 86% (tireWear 0.00 a 0.14): Aquecendo (+1.8% até 0.0%)
+     * - 85% a 45% (tireWear 0.15 a 0.55): Janela Ideal (bônus até -1.5%)
+     * - 44% a 20% (tireWear 0.56 a 0.80): Desgaste Alto (+0.5% a +3.5%)
+     * - 19% a 1%  (tireWear 0.81 a 0.99): Cliff Crítico (+4.5% até +11.0%)
+     */
+    function getTireThermalAndWearFactor(tire, weather, tireWear) {
+      const basePace = tire.pace[weather] || 1.0;
+      const health = Math.max(0, 1 - tireWear); // 1.0 = 100%, 0.0 = 0%
+
+      let curveDelta = 0;
+      if (health > 0.85) {
+        // Fase 1: Pneu frio aquecendo (+0.018 em 100% -> 0 em 85%)
+        const coldRatio = (health - 0.85) / 0.15;
+        curveDelta = 0.018 * coldRatio;
+      } else if (health >= 0.45) {
+        // Fase 2: Janela Ideal (parábola suave com pico de -0.015 em ~68% de integridade)
+        const norm = (health - 0.45) / 0.40; // 0 em 45%, 1 em 85%
+        const bell = 4 * norm * (1 - norm); // 0 nas bordas, 1 no centro (65%)
+        curveDelta = -0.015 * bell;
+      } else if (health >= 0.20) {
+        // Fase 3A: Desgaste acentuado (+0.004 até +0.036)
+        const wearRatio = (0.45 - health) / 0.25;
+        curveDelta = 0.004 + wearRatio * 0.032;
+      } else {
+        // Fase 3B: Cliff crítico abaixo de 20% (+0.045 até +0.110)
+        const cliffRatio = (0.20 - health) / 0.20;
+        curveDelta = 0.045 + cliffRatio * 0.065;
+      }
+
+      return basePace + curveDelta;
+    }
+
+    function getTireThermalPhaseInfo(tireWear) {
+      const healthPct = Math.max(0, Math.round((1 - tireWear) * 100));
+      if (healthPct > 85) {
+        return { label: '❄️ Aquecendo', badgeClass: 'badge-blue' };
+      }
+      if (healthPct >= 45) {
+        return { label: '🔥 Temp. Ideal', badgeClass: 'badge-green' };
+      }
+      if (healthPct >= 20) {
+        return { label: '⚠️ Desgaste Alto', badgeClass: 'badge-amber' };
+      }
+      return { label: '🚨 Risco de Estouro', badgeClass: 'badge-red' };
+    }
+
+    /**
+     * Balanceamento progressivo de motor e marca de pneu da IA por etapa:
+     * - Etapas 1 e 2 (stageIndex 0..1): Top 2 IA (skill >= 82) usam Aspirado + Tupã; demais 5 usam Normal + Bandeirante.
+     * - Etapas 3 e 4 (stageIndex 2..3): Líder do campeonato estreia Turbo; restante do pelotão sobe para Aspirado + Tupã.
+     * - Etapas 5 e 6 (stageIndex 4..5): Top 2 do campeonato usam Turbo + ApexBR; restante usa Aspirado + Tupã.
+     */
+    function getAiEquipmentForStage(aiId, aiSkill, stageIndex, weather) {
+      const sortedStandings = [...gameState.standings].sort((a, b) => b.points - a.points || b.wins - a.wins);
+      const champRank = sortedStandings.findIndex((s) => s.id === aiId); // 0 = líder
+
+      let engineKey = 'normal';
+      let tireBrandPrefix = 'band';
+
+      if (stageIndex <= 1) {
+        if (aiSkill >= 82) {
+          engineKey = 'aspirado';
+          tireBrandPrefix = 'tupa';
+        } else {
+          engineKey = 'normal';
+          tireBrandPrefix = 'band';
+        }
+      } else if (stageIndex <= 3) {
+        if (champRank === 0 && stageIndex >= 2) {
+          engineKey = 'turbo';
+          tireBrandPrefix = 'tupa';
+        } else {
+          engineKey = 'aspirado';
+          tireBrandPrefix = 'tupa';
+        }
+      } else {
+        if (champRank >= 0 && champRank <= 1) {
+          engineKey = 'turbo';
+          tireBrandPrefix = 'apex';
+        } else {
+          engineKey = 'aspirado';
+          tireBrandPrefix = 'tupa';
+        }
+      }
+
+      const compoundSuffix = weather === 'chuva' ? 'chuva' : weather === 'mista' ? 'misto' : 'seco';
+      return {
+        engineKey,
+        tireBrandPrefix,
+        tireId: `${tireBrandPrefix}_${compoundSuffix}`
+      };
+    }
+
+    function startLiveRace() {
+      const startTireVal = document.getElementById('strat-start-tire').value;
+      const startParsed = parseTireSelectionValue(startTireVal);
+      if (!startParsed) {
+        showToast('Selecione um jogo de pneus válido no estoque!');
+        return;
+      }
+      if (startParsed.kind === 'new' && (gameState.tiresStock[startParsed.tireId] || 0) <= 0) {
+        showToast('Jogo de pneus novo indisponível no estoque!');
+        return;
+      }
+
+      const pit1On = document.getElementById('strat-pit1-on').checked;
+      const pit1ChangeTire = document.getElementById('strat-pit1-change-tire').checked;
+      const pit1Refuel = document.getElementById('strat-pit1-refuel').checked;
+
+      const pit2On = document.getElementById('strat-pit2-on').checked;
+      const pit2ChangeTire = document.getElementById('strat-pit2-change-tire').checked;
+      const pit2Refuel = document.getElementById('strat-pit2-refuel').checked;
+
+      if (pit1On && !pit1ChangeTire && !pit1Refuel) {
+        showToast('Na Parada 1, marque Trocar Pneus, Reabastecer ou ambos!');
+        return;
+      }
+      if (pit2On && !pit2ChangeTire && !pit2Refuel) {
+        showToast('Na Parada 2, marque Trocar Pneus, Reabastecer ou ambos!');
+        return;
+      }
+      if (pit1On && pit1ChangeTire && !document.getElementById('strat-pit1-tire').value) {
+        showToast('Sem pneu disponível para a Parada 1! Compre pneus ou desmarque Trocar Pneus.');
+        return;
+      }
+      if (pit2On && pit2ChangeTire && !document.getElementById('strat-pit2-tire').value) {
+        showToast('Sem pneu disponível para a Parada 2! Compre pneus ou desmarque Trocar Pneus.');
+        return;
+      }
+
+      // Consome o jogo escolhido na largada (novo ou semi-novo)
+      if (startParsed.kind === 'new') {
+        gameState.tiresStock[startParsed.tireId] -= 1;
+      } else {
+        gameState.usedTiresStock = (gameState.usedTiresStock || []).filter((u) => u.uid !== startParsed.uid);
+      }
+      saveGameToStorage();
+
+      const startInitialWear = Math.max(0, Math.min(0.95, 1 - startParsed.health / 100));
+      const startHealthPct = Math.round((1 - startInitialWear) * 100);
+
+      const track = TRACKS_DATA[gameState.stageIndex];
+      const sched = gameState.stageSchedule[gameState.stageIndex];
+      const car = CARS_DATA[gameState.selectedCarId];
+      const eng = car.engines[gameState.activeEngine];
+      const startFuel = parseInt(document.getElementById('strat-start-fuel').value, 10) || eng.tank;
+
+      const plannedPits = [];
+      if (pit1On) {
+        plannedPits.push({
+          lap: parseInt(document.getElementById('strat-pit1-lap').value, 10),
+          changeTire: pit1ChangeTire,
+          tireSelection: document.getElementById('strat-pit1-tire').value,
+          refuel: pit1Refuel,
+          fuel: parseInt(document.getElementById('strat-pit1-fuel').value, 10),
+          done: false
+        });
+      }
+      if (pit2On) {
+        plannedPits.push({
+          lap: parseInt(document.getElementById('strat-pit2-lap').value, 10),
+          changeTire: pit2ChangeTire,
+          tireSelection: document.getElementById('strat-pit2-tire').value,
+          refuel: pit2Refuel,
+          fuel: parseInt(document.getElementById('strat-pit2-fuel').value, 10),
+          done: false
+        });
+      }
+
+      const initialWeather = getForecastWeatherForLap(sched, 1);
+
+      const racers = [
+        {
+          id: 'player',
+          name: gameState.driverName,
+          carId: gameState.selectedCarId,
+          color: car.color,
+          isPlayer: true,
+          lap: 1,
+          lapProgress: 0,
+          totalTime: 0,
+          currentLapElapsed: 0,
+          lastLapTime: null,
+          bestLapTime: null,
+          lastLapDelta: null,
+          fuel: startFuel,
+          maxFuel: eng.tank,
+          tireId: startParsed.tireId,
+          tireWear: startInitialWear,
+          warnedIdealTemp: startHealthPct <= 85,
+          warnedCriticalTire: startHealthPct < 20,
+          mechHealth: 100,
+          pitStops: 0,
+          inPitTimer: 0,
+          dnf: false,
+          dnfReason: '',
+          skill: gameState.driverSkill
+        },
+        ...AI_DRIVERS_BASE.map((ai, i) => {
+          const standingEntry = gameState.standings.find((s) => s.id === ai.id);
+          const currentAiSkill = standingEntry && typeof standingEntry.skill === 'number' ? standingEntry.skill : ai.skill;
+          const aiEquip = getAiEquipmentForStage(ai.id, currentAiSkill, gameState.stageIndex, initialWeather);
+          const aiCar = CARS_DATA[ai.carId];
+          const aiEng = aiCar.engines[aiEquip.engineKey];
+
+          return {
+            id: ai.id,
+            name: ai.name,
+            carId: ai.carId,
+            color: ai.color,
+            isPlayer: false,
+            lap: 1,
+            lapProgress: -0.012 * (i + 1),
+            totalTime: 0.35 * (i + 1),
+            currentLapElapsed: 0,
+            lastLapTime: null,
+            bestLapTime: null,
+            lastLapDelta: null,
+            fuel: aiEng.tank,
+            maxFuel: aiEng.tank,
+            engineKey: aiEquip.engineKey,
+            tireBrandPrefix: aiEquip.tireBrandPrefix,
+            tireId: aiEquip.tireId,
+            tireWear: 0,
+            mechHealth: 92 + (i % 4) * 2,
+            pitStops: 0,
+            inPitTimer: 0,
+            dnf: false,
+            dnfReason: '',
+            skill: currentAiSkill,
+            aiPlannedPitLap: Math.floor(track.laps * (0.48 + (i % 3) * 0.05))
+          };
+        })
+      ];
+
+      raceSession = {
+        running: true,
+        simSpeed: gameState.settings.simSpeed || 2,
+        track,
+        sched,
+        weather: initialWeather,
+        racers,
+        plannedPits,
+        manualPitRequested: false,
+        logs: [],
+        brokenParts: {}
+      };
+
+      document.getElementById('nav-tab-race').classList.remove('hidden');
+      document.getElementById('race-header-title').textContent = `ETAPA ${gameState.stageIndex + 1} · ${track.name.toUpperCase()}`;
+      document.getElementById('race-status-badge').textContent = 'CORRIDA EM ANDAMENTO';
+      document.getElementById('race-status-badge').className = 'badge badge-green';
+      document.getElementById('race-log-box').innerHTML = '';
+
+      document.getElementById('live-pit-change-tire').checked = true;
+      document.getElementById('live-pit-refuel').checked = true;
+      toggleLivePitInputs();
+      populateLivePitTireSelect();
+
+      document.getElementById('live-pit-fuel').max = eng.tank;
+      document.getElementById('live-pit-fuel').value = Math.min(eng.tank, 35);
+      document.getElementById('btn-call-pit').textContent = '🛑 CHAMAR BOX';
+      document.getElementById('btn-call-pit').className = 'btn btn-gold btn-sm';
+
+      switchMainTab('tab-race');
+      setSimSpeed(raceSession.simSpeed);
+      if (startParsed.kind === 'used') {
+        addRaceLog(`🚦 Luzes apagadas em ${track.name}! Largando com pneu semi-novo (${startHealthPct}% de borracha).`);
+      } else {
+        addRaceLog(`🚦 Luzes apagadas em ${track.name}! Pneus frios na largada — aqueça nas primeiras voltas.`);
+      }
+      playBeep(900, 0.16);
+
+      startRaceLoops();
+    }
+
+    function toggleLivePitInputs() {
+      const changeTire = document.getElementById('live-pit-change-tire').checked;
+      const refuel = document.getElementById('live-pit-refuel').checked;
+      const tireSel = document.getElementById('live-pit-tire');
+      const fuelInp = document.getElementById('live-pit-fuel');
+
+      if (tireSel) {
+        tireSel.disabled = !changeTire;
+        tireSel.style.opacity = changeTire ? '1' : '0.45';
+      }
+      if (fuelInp) {
+        fuelInp.disabled = !refuel;
+        fuelInp.style.opacity = refuel ? '1' : '0.45';
+      }
+    }
+
+    function populateLivePitTireSelect() {
+      const sel = document.getElementById('live-pit-tire');
+      sel.innerHTML = '';
+      const options = [];
+
+      TIRE_CATALOG.forEach((t) => {
+        const qty = gameState.tiresStock[t.id] || 0;
+        if (qty > 0) {
+          options.push({
+            value: `new:${t.id}`,
+            label: `${t.label} — 100% (${qty} novo${qty > 1 ? 's' : ''})`
+          });
+        }
+      });
+
+      const sortedUsed = [...(gameState.usedTiresStock || [])].sort((a, b) => b.health - a.health);
+      sortedUsed.forEach((uItem) => {
+        const t = TIRE_CATALOG.find((item) => item.id === uItem.tireId);
+        if (t) {
+          options.push({
+            value: `used:${uItem.uid}`,
+            label: `♻️ ${t.label} [Usado ${uItem.health}%]`
+          });
+        }
+      });
+
+      if (options.length === 0) {
+        sel.innerHTML = '<option value="">Sem pneus no estoque</option>';
+      } else {
+        options.forEach((o) => {
+          const opt = document.createElement('option');
+          opt.value = o.value;
+          opt.textContent = o.label;
+          sel.appendChild(opt);
+        });
+      }
+    }
+
+    function toggleManualPitCall() {
+      if (!raceSession || !raceSession.running) return;
+      const changeTire = document.getElementById('live-pit-change-tire').checked;
+      const refuel = document.getElementById('live-pit-refuel').checked;
+
+      if (!raceSession.manualPitRequested && !changeTire && !refuel) {
+        showToast('Selecione Trocar Pneus, Abastecer ou ambos antes de chamar o box!');
+        return;
+      }
+
+      if (!raceSession.manualPitRequested && changeTire && !document.getElementById('live-pit-tire').value) {
+        showToast('Não há jogos de pneus no estoque! Desmarque "Trocar Pneus" para só abastecer.');
+        return;
+      }
+
+      raceSession.manualPitRequested = !raceSession.manualPitRequested;
+      const btn = document.getElementById('btn-call-pit');
+      if (raceSession.manualPitRequested) {
+        const actionsDesc = changeTire && refuel
+          ? 'Troca de Pneus + Reabastecimento'
+          : changeTire
+          ? 'Somente Troca de Pneus'
+          : 'Somente Reabastecimento';
+        btn.textContent = '✅ BOX CONFIRMADO';
+        btn.className = 'btn btn-primary btn-sm';
+        addRaceLog(`📻 Box confirmado (${actionsDesc})! Mecânicos prontos ao fim desta volta.`);
+        playBeep(650, 0.08);
+      } else {
+        btn.textContent = '🛑 CHAMAR BOX';
+        btn.className = 'btn btn-gold btn-sm';
+        addRaceLog('📻 Chamada de box cancelada.');
+      }
+    }
+
+    function setSimSpeed(mult) {
+      if (raceSession) raceSession.simSpeed = mult;
+      [1, 2, 4].forEach((s) => {
+        const b = document.getElementById(`btn-speed-${s}x`);
+        if (b) b.style.borderColor = s === mult ? '#fbbf24' : '#475569';
+      });
+    }
+
+    function addRaceLog(msg) {
+      if (!raceSession) return;
+      const box = document.getElementById('race-log-box');
+      const div = document.createElement('div');
+      div.textContent = msg;
+      box.prepend(div);
+    }
+
+    function startRaceLoops() {
+      stopRaceLoops();
+      const dtSim = 0.25;
+      raceIntervalId = setInterval(() => {
+        if (!raceSession || !raceSession.running) return;
+        for (let step = 0; step < raceSession.simSpeed; step++) {
+          if (!raceSession.running) break;
+          tickRacePhysics(dtSim);
+        }
+        updateLiveRaceUI();
+      }, 120);
+
+      function renderCanvasLoop() {
+        drawRaceCanvas();
+        if (raceSession && raceSession.running) {
+          raceAnimFrameId = requestAnimationFrame(renderCanvasLoop);
+        }
+      }
+      raceAnimFrameId = requestAnimationFrame(renderCanvasLoop);
+    }
+
+    function stopRaceLoops() {
+      if (raceIntervalId) clearInterval(raceIntervalId);
+      if (raceAnimFrameId) cancelAnimationFrame(raceAnimFrameId);
+      raceIntervalId = null;
+      raceAnimFrameId = null;
+    }
+
+    function tickRacePhysics(dt) {
+      const ses = raceSession;
+      const track = ses.track;
+
+      const leaderNow = getSortedRacers()[0];
+      const currentRaceLap = leaderNow ? Math.min(leaderNow.lap, track.laps) : 1;
+      const forecastW = getForecastWeatherForLap(ses.sched, currentRaceLap);
+      if (forecastW !== ses.weather) {
+        ses.weather = forecastW;
+        const wName = forecastW === 'seca' ? '☀️ Sol voltou e a pista está secando!' : forecastW === 'mista' ? '⛅ Garoa leve deixando o traçado misto!' : '🌧️ Chuva forte atingiu o circuito!';
+        addRaceLog(`🌦️ METEOROLOGIA (Volta ${currentRaceLap}): ${wName}`);
+      }
+
+      ses.racers.forEach((r) => {
+        if (r.dnf) return;
+        if (r.lap > track.laps) return;
+
+        if (r.inPitTimer > 0) {
+          r.inPitTimer -= dt;
+          r.totalTime += dt;
+          r.currentLapElapsed += dt;
+          return;
+        }
+
+        const car = CARS_DATA[r.carId];
+        const eng = r.isPlayer ? car.engines[gameState.activeEngine] : car.engines[r.engineKey || 'aspirado'];
+        const tire = TIRE_CATALOG.find((t) => t.id === r.tireId) || TIRE_CATALOG[0];
+
+        const fChassis = getCarChassisTrackFactor(car, track);
+        const fSkill = 1 - (r.skill - 50) * 0.0003;
+        const fTire = getTireThermalAndWearFactor(tire, ses.weather, r.tireWear);
+        const fFuel = 1 + (r.fuel / r.maxFuel) * 0.018;
+
+        let avgHp = r.mechHealth;
+        if (r.isPlayer) {
+          avgHp = PART_CATEGORIES.reduce((acc, p) => acc + gameState.partsHealth[p.id], 0) / PART_CATEGORIES.length;
+          r.mechHealth = avgHp;
+        }
+        const fMech = 1 + ((100 - avgHp) / 100) * 0.05;
+
+        const lapTimeSec = track.baseLapSec * fChassis * eng.lapFactor * fSkill * fTire * fFuel * fMech * (0.996 + Math.random() * 0.008);
+        const progressDelta = dt / lapTimeSec;
+
+        r.lapProgress += progressDelta;
+        r.totalTime += dt;
+        r.currentLapElapsed += dt;
+
+        const kmCovered = progressDelta * track.lapKm;
+        r.fuel = Math.max(0, r.fuel - kmCovered / eng.kmPerL);
+
+        const tireLifeKm = tire.type === 'chuva' && ses.weather === 'seca' ? track.lapKm * 2 : tire.life[ses.weather];
+        const trackTireMult = track.tireMultAll * (tire.type === 'seco' ? track.tireMultSlick : 1.0);
+        r.tireWear = Math.min(1, r.tireWear + (kmCovered / tireLifeKm) * trackTireMult);
+
+        // Avisos térmicos e estouro de pneu em 0% (tireWear >= 1)
+        const tireHealthPct = Math.max(0, Math.round((1 - r.tireWear) * 100));
+
+        if (r.isPlayer && !r.dnf) {
+          if (!r.warnedIdealTemp && tireHealthPct <= 85 && tireHealthPct >= 45) {
+            r.warnedIdealTemp = true;
+            addRaceLog(`🔥 ENGENHEIRO: Pneus na temperatura ideal (${tireHealthPct}%)! Aderência máxima liberada.`);
+          }
+          if (!r.warnedCriticalTire && tireHealthPct < 20 && tireHealthPct > 0) {
+            r.warnedCriticalTire = true;
+            addRaceLog(`🚨 ENGENHEIRO: Pneus no limite (${tireHealthPct}%)! Aderência despencando — risco iminente de estouro!`);
+            playBeep(440, 0.14);
+          }
+        }
+
+        if (r.tireWear >= 1 && !r.dnf) {
+          r.dnf = true;
+          r.dnfReason = 'Pneu Estourado';
+          if (r.isPlayer) {
+            addRaceLog(`💥 ABANDONO! Pneu estourou na volta ${r.lap}! Fim de prova para ${r.name}.`);
+            playBeep(260, 0.25);
+          } else {
+            addRaceLog(`💥 DIREÇÃO DE PROVA: ${r.name} abandonou na volta ${r.lap} (Pneu Estourado).`);
+          }
+        }
+
+        if (r.isPlayer && !r.dnf) {
+          PART_CATEGORIES.forEach((p) => {
+            const baseKmPerPct = p.kmPerPct || 13.0;
+            const wear = (kmCovered / baseKmPerPct) * track.partWearMult * (0.88 + Math.random() * 0.24);
+            gameState.partsHealth[p.id] = Math.max(0, gameState.partsHealth[p.id] - wear);
+
+            if (gameState.partsHealth[p.id] < 20 && Math.random() < 0.0012 && !ses.brokenParts[p.id]) {
+              ses.brokenParts[p.id] = true;
+              r.dnf = true;
+              r.dnfReason = `Quebra de ${p.name}`;
+              addRaceLog(`💥 ABANDONO! ${r.name} sofreu ${r.dnfReason} na volta ${r.lap}!`);
+            }
+          });
+
+          if (r.fuel <= 0 && !r.dnf) {
+            r.dnf = true;
+            r.dnfReason = 'Pane Seca (Sem Combustível)';
+            addRaceLog(`⛽ ABANDONO! ${r.name} ficou sem combustível na volta ${r.lap}!`);
+          }
+        } else if (!r.isPlayer && !r.dnf) {
+          const aiWear = (kmCovered / 12.5) * track.partWearMult * (0.85 + Math.random() * 0.35);
+          r.mechHealth = Math.max(0, r.mechHealth - aiWear);
+
+          if (r.mechHealth < 22 && Math.random() < 0.00055) {
+            const aiFailures = ['Falha no Motor', 'Quebra de Suspensão', 'Problema nos Freios', 'Pane Elétrica'];
+            r.dnf = true;
+            r.dnfReason = aiFailures[Math.floor(Math.random() * aiFailures.length)];
+            addRaceLog(`⚠️ DIREÇÃO DE PROVA: ${r.name} abandonou na volta ${r.lap} (${r.dnfReason}).`);
+          }
+        }
+
+        if (r.lapProgress >= 1) {
+          const completedLapDuration = r.currentLapElapsed;
+          if (r.bestLapTime === null) {
+            r.bestLapTime = completedLapDuration;
+            r.lastLapDelta = 0;
+          } else {
+            r.lastLapDelta = completedLapDuration - r.bestLapTime;
+            if (completedLapDuration < r.bestLapTime) {
+              r.bestLapTime = completedLapDuration;
+            }
+          }
+          r.lastLapTime = completedLapDuration;
+          r.currentLapElapsed = 0;
+
+          r.lapProgress -= 1;
+          r.lap += 1;
+
+          if (r.lap <= track.laps && !r.dnf) {
+            if (r.isPlayer) {
+              handlePlayerLapCompletion(r);
+            } else {
+              handleAiLapCompletion(r);
+            }
+          }
+        }
+      });
+
+      const player = ses.racers.find((r) => r.isPlayer);
+      const leader = getSortedRacers()[0];
+      if (player.dnf || player.lap > track.laps || (leader && leader.lap > track.laps)) {
+        finishRace(false);
+      }
+    }
+
+    function handlePlayerLapCompletion(player) {
+      const ses = raceSession;
+      const planned = ses.plannedPits.find((p) => !p.done && p.lap === player.lap);
+
+      if (ses.manualPitRequested || planned) {
+        const isManual = ses.manualPitRequested;
+        const doChangeTire = isManual
+          ? document.getElementById('live-pit-change-tire').checked
+          : planned.changeTire;
+        const chosenTireSelection = isManual
+          ? document.getElementById('live-pit-tire').value
+          : planned.tireSelection;
+        const doRefuel = isManual
+          ? document.getElementById('live-pit-refuel').checked
+          : planned.refuel;
+        const requestedAddFuel = isManual
+          ? parseInt(document.getElementById('live-pit-fuel').value, 10)
+          : planned.fuel;
+
+        if (planned) planned.done = true;
+        ses.manualPitRequested = false;
+        const btn = document.getElementById('btn-call-pit');
+        btn.textContent = '🛑 CHAMAR BOX';
+        btn.className = 'btn btn-gold btn-sm';
+
+        // Tempo base entrada/saída pit lane: 3.5s
+        let pitDuration = 3.5;
+        const performedActions = [];
+
+        if (doChangeTire && chosenTireSelection) {
+          const parsedTire = parseTireSelectionValue(chosenTireSelection);
+          if (parsedTire && parsedTire.kind === 'new' && (gameState.tiresStock[parsedTire.tireId] || 0) > 0) {
+            gameState.tiresStock[parsedTire.tireId] -= 1;
+            player.tireId = parsedTire.tireId;
+            player.tireWear = 0;
+            player.warnedIdealTemp = false;
+            player.warnedCriticalTire = false;
+            pitDuration += 3.8;
+            performedActions.push('pneus novos (100%)');
+            populateLivePitTireSelect();
+          } else if (parsedTire && parsedTire.kind === 'used') {
+            gameState.usedTiresStock = (gameState.usedTiresStock || []).filter((u) => u.uid !== parsedTire.uid);
+            const initWear = Math.max(0, Math.min(0.95, 1 - parsedTire.health / 100));
+            const hPct = Math.round((1 - initWear) * 100);
+            player.tireId = parsedTire.tireId;
+            player.tireWear = initWear;
+            player.warnedIdealTemp = hPct <= 85;
+            player.warnedCriticalTire = hPct < 20;
+            pitDuration += 3.8;
+            performedActions.push(`pneus semi-novos (${hPct}%)`);
+            populateLivePitTireSelect();
+          } else {
+            addRaceLog('⚠️ Jogo de pneus selecionado não estava mais disponível no estoque!');
+          }
+        } else if (doChangeTire) {
+          addRaceLog('⚠️ Sem jogo de pneus disponível no estoque na hora do box!');
+        }
+
+        if (doRefuel) {
+          const fuelBefore = player.fuel;
+          const addLiters = Math.max(0, requestedAddFuel || 0);
+          const newTotalFuel = Math.min(player.maxFuel, fuelBefore + addLiters);
+          const actualAdded = Math.max(0, newTotalFuel - fuelBefore);
+          player.fuel = newTotalFuel;
+          pitDuration += actualAdded * 0.08;
+          performedActions.push(`+${actualAdded.toFixed(1)}L (sobra ${fuelBefore.toFixed(1)}L → total ${player.fuel.toFixed(1)}L)`);
+        }
+
+        if (performedActions.length === 0) {
+          performedActions.push('passagem rápida');
+        }
+
+        player.inPitTimer = pitDuration;
+        player.pitStops += 1;
+        addRaceLog(`🔧 PIT STOP (Volta ${player.lap}): ${pitDuration.toFixed(1)}s (${performedActions.join(' + ')}).`);
+        playBeep(520, 0.1);
+      }
+    }
+
+    function handleAiLapCompletion(ai) {
+      const ses = raceSession;
+      const needFuel = ai.fuel < 15;
+      const needTires = ai.tireWear > 0.78;
+      const scheduledLap = ai.lap === ai.aiPlannedPitLap;
+
+      if (scheduledLap || needFuel || needTires) {
+        let pitDur = 3.5;
+        if (scheduledLap || needTires) {
+          ai.tireWear = 0;
+          const prefix = ai.tireBrandPrefix || 'tupa';
+          ai.tireId = ses.weather === 'chuva' ? `${prefix}_chuva` : ses.weather === 'mista' ? `${prefix}_misto` : `${prefix}_seco`;
+          pitDur += 3.8;
+        }
+        if (scheduledLap || needFuel) {
+          const added = Math.max(0, ai.maxFuel - ai.fuel);
+          ai.fuel = ai.maxFuel;
+          pitDur += added * 0.08;
+        }
+        ai.inPitTimer = pitDur;
+        ai.pitStops += 1;
+      }
+    }
+
+    function getSortedRacers() {
+      return [...raceSession.racers].sort((a, b) => {
+        if (a.dnf !== b.dnf) return a.dnf ? 1 : -1;
+        const distA = a.lap + a.lapProgress;
+        const distB = b.lap + b.lapProgress;
+        return distB - distA;
+      });
+    }
+
+    function updateLiveRaceUI() {
+      if (!raceSession) return;
+      const ses = raceSession;
+      const sorted = getSortedRacers();
+      const leader = sorted[0];
+      const player = ses.racers.find((r) => r.isPlayer);
+      const car = CARS_DATA[gameState.selectedCarId];
+      const eng = car.engines[gameState.activeEngine];
+      const tire = TIRE_CATALOG.find((t) => t.id === player.tireId) || TIRE_CATALOG[0];
+
+      document.getElementById('race-lap-counter').textContent = `${Math.min(leader.lap, ses.track.laps)} / ${ses.track.laps}`;
+      document.getElementById('race-weather-pill').textContent =
+        ses.weather === 'seca' ? '☀️ Seco' : ses.weather === 'mista' ? '⛅ Misto' : '🌧️ Chuva';
+
+      const fuelPct = Math.max(0, Math.round((player.fuel / player.maxFuel) * 100));
+      const estLaps = Math.floor((player.fuel * eng.kmPerL) / ses.track.lapKm);
+      document.getElementById('tel-fuel-text').textContent = `${player.fuel.toFixed(1)} L (~${estLaps} voltas)`;
+      document.getElementById('tel-fuel-bar').style.width = `${fuelPct}%`;
+      document.getElementById('tel-fuel-bar').style.backgroundColor = fuelPct < 20 ? '#ef4444' : '#22c55e';
+
+      const tireHealth = Math.max(0, Math.round((1 - player.tireWear) * 100));
+      const phaseInfo = getTireThermalPhaseInfo(player.tireWear);
+      const phaseBadge = document.getElementById('tel-tire-phase-badge');
+      if (phaseBadge) {
+        phaseBadge.textContent = phaseInfo.label;
+        phaseBadge.className = `badge ${phaseInfo.badgeClass}`;
+      }
+
+      const tireLifeKm = tire.type === 'chuva' && ses.weather === 'seca' ? ses.track.lapKm * 2 : tire.life[ses.weather];
+      const tireTrackMult = ses.track.tireMultAll * (tire.type === 'seco' ? ses.track.tireMultSlick : 1.0);
+      const tireWearPerLap = (ses.track.lapKm / tireLifeKm) * tireTrackMult;
+      const tireRemLaps = tireWearPerLap > 0 ? Math.max(0, Math.floor((1 - player.tireWear) / tireWearPerLap)) : 0;
+
+      document.getElementById('tel-tire-label').textContent = tire.label;
+      document.getElementById('tel-tire-pct').textContent = `${tireHealth}%`;
+      document.getElementById('tel-tire-laps').textContent = `~${tireRemLaps} voltas`;
+      document.getElementById('tel-tire-bar').style.width = `${tireHealth}%`;
+      document.getElementById('tel-tire-bar').style.backgroundColor =
+        tireHealth < 20 ? '#ef4444' : tireHealth < 45 ? '#f59e0b' : tireHealth <= 85 ? '#22c55e' : '#38bdf8';
+
+      const avgMech = Math.round(PART_CATEGORIES.reduce((acc, p) => acc + gameState.partsHealth[p.id], 0) / PART_CATEGORIES.length);
+      document.getElementById('tel-mech-pct').textContent = `${avgMech}%`;
+      const lowParts = PART_CATEGORIES.filter((p) => gameState.partsHealth[p.id] < 30);
+      document.getElementById('tel-part-warning').textContent =
+        lowParts.length > 0 ? `⚠️ Alerta crítico: ${lowParts.map((p) => p.name).join(', ')}` : '';
+
+      const nextPlan = ses.plannedPits.find((p) => !p.done && p.lap >= player.lap);
+      let nextPlanLabel = 'Nenhuma parada pendente';
+      if (nextPlan) {
+        const modeTxt = nextPlan.changeTire && nextPlan.refuel
+          ? 'Pneus + Comb.'
+          : nextPlan.changeTire
+          ? 'Só Pneus'
+          : 'Só Combustível';
+        nextPlanLabel = `Próxima parada: Volta ${nextPlan.lap} (${modeTxt})`;
+      }
+      document.getElementById('pit-status-text').textContent = ses.manualPitRequested
+        ? '🛑 Box solicitado ao fim desta volta!'
+        : nextPlanLabel;
+
+      const tbody = document.getElementById('race-leaderboard-body');
+      tbody.innerHTML = '';
+      sorted.forEach((r, idx) => {
+        let intervalText = 'Líder';
+        if (r.dnf) {
+          intervalText = r.dnfReason;
+        } else if (idx > 0) {
+          const carAhead = sorted[idx - 1];
+          const lapDiff = (carAhead.lap + carAhead.lapProgress) - (r.lap + r.lapProgress);
+          const gapAheadSec = Math.max(0.05, lapDiff * ses.track.baseLapSec);
+          intervalText = lapDiff >= 1
+            ? `+${Math.floor(lapDiff)} volta(s)`
+            : `+${gapAheadSec.toFixed(2).replace('.', ',')}s`;
+        }
+
+        const lastLapStr = r.lastLapTime !== null ? formatTime(r.lastLapTime) : '--:--,--';
+        let deltaHtml = '<span class="text-muted">--</span>';
+        if (r.lastLapTime !== null && r.lastLapDelta !== null) {
+          if (r.lastLapDelta <= 0) {
+            const absD = Math.abs(r.lastLapDelta).toFixed(2).replace('.', ',');
+            deltaHtml = `<span class="text-green" title="Mais rápido que sua melhor volta">▼ -${absD}s</span>`;
+          } else {
+            const posD = r.lastLapDelta.toFixed(2).replace('.', ',');
+            deltaHtml = `<span class="text-red" title="Mais devagar que sua melhor volta">▲ +${posD}s</span>`;
+          }
+        }
+
+        const tr = document.createElement('tr');
+        if (r.isPlayer) tr.className = 'row-player';
+        tr.innerHTML = `
+          <td><strong>${idx + 1}º</strong></td>
+          <td>${r.name} ${r.inPitTimer > 0 ? '<span class="badge badge-amber">BOX</span>' : ''}</td>
+          <td>${r.dnf ? '<span class="text-red">OUT</span>' : Math.min(r.lap, ses.track.laps)}</td>
+          <td>${intervalText}</td>
+          <td style="font-family:monospace;">${lastLapStr}</td>
+          <td style="font-family:monospace; font-weight:700;">${deltaHtml}</td>
+          <td>${r.pitStops}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function abandonCurrentRace() {
+      if (!raceSession || !raceSession.running) return;
+      const player = raceSession.racers.find((r) => r.isPlayer);
+      player.dnf = true;
+      player.dnfReason = 'Abandono Voluntário';
+      finishRace(true);
+    }
+
+    function finishRace(voluntaryAbandon) {
+      if (!raceSession) return;
+      raceSession.running = false;
+      stopRaceLoops();
+
+      const ses = raceSession;
+      const sorted = getSortedRacers();
+      const playerPos = sorted.findIndex((r) => r.isPlayer) + 1;
+      const playerObj = sorted.find((r) => r.isPlayer);
+
+      // Evolução amortecida de habilidade da IA (+3, +2, +1 no pódio; 0 em 4º/5º; -1, -2, -3 de 6º a 8º/DNF, trava [68..92])
+      const aiSkillDeltaMap = { 1: 3, 2: 2, 3: 1, 4: 0, 5: 0, 6: -1, 7: -2, 8: -3 };
+
+      sorted.forEach((r, idx) => {
+        const entry = gameState.standings.find((s) => s.id === r.id);
+        if (!entry) return;
+        if (!r.dnf) {
+          entry.points += POINTS_TABLE[idx] || 0;
+          if (idx === 0) entry.wins += 1;
+        }
+        if (!r.isPlayer) {
+          const pos = idx + 1;
+          const aiDelta = r.dnf ? -3 : (aiSkillDeltaMap[pos] !== undefined ? aiSkillDeltaMap[pos] : -2);
+          const baseSkill = typeof entry.skill === 'number' ? entry.skill : r.skill;
+          entry.skill = Math.max(68, Math.min(92, baseSkill + aiDelta));
+        }
+      });
+
+      const won = !playerObj.dnf && playerPos === 1;
+      const skillDeltaMap = { 1: 10, 2: 6, 3: 3, 4: -1, 5: -2, 6: -3, 7: -4, 8: -5 };
+      const skillDelta = playerObj.dnf ? -5 : (skillDeltaMap[playerPos] !== undefined ? skillDeltaMap[playerPos] : -5);
+      gameState.driverSkill = Math.max(10, Math.min(100, gameState.driverSkill + skillDelta));
+
+      let prize = 0;
+      let sponsorMaster = 0;
+      let sponsorGoal = 0;
+
+      if (!playerObj.dnf && !voluntaryAbandon) {
+        prize = PRIZE_TABLE[playerPos - 1] || 2000;
+        sponsorMaster = 3000;
+        if (playerPos <= 3 && Object.keys(ses.brokenParts).length === 0) {
+          sponsorGoal = 2500;
+        }
+      }
+
+      const totalEarned = prize + sponsorMaster + sponsorGoal;
+      gameState.cash += totalEarned;
+
+      // Reaproveitamento automático do pneu montado no fim da prova se ainda tiver > 15% de vida útil
+      let recoveredTireNotice = '';
+      const remainingTireHealth = Math.max(0, Math.round((1 - playerObj.tireWear) * 100));
+      if (playerObj.dnfReason !== 'Pneu Estourado' && remainingTireHealth > 15 && remainingTireHealth < 100) {
+        const mountedTireObj = TIRE_CATALOG.find((t) => t.id === playerObj.tireId);
+        if (mountedTireObj) {
+          if (!Array.isArray(gameState.usedTiresStock)) gameState.usedTiresStock = [];
+          gameState.usedTiresStock.push({
+            uid: generateTireUid(),
+            tireId: playerObj.tireId,
+            health: remainingTireHealth
+          });
+          recoveredTireNotice = `
+            <div style="margin-top:8px; padding:7px 9px; border-radius:5px; background:rgba(34,197,94,0.14); border:1px solid #22c55e; color:#86efac; font-size:0.82rem;">
+              ♻️ <strong>Pneu Reaproveitado:</strong> ${mountedTireObj.label} guardado na garagem com <strong>${remainingTireHealth}%</strong> de vida útil!
+            </div>
+          `;
+        }
+      }
+
+      ses.sched.completed = true;
+      ses.sched.winnerName = sorted[0].name;
+
+      const nextStageIdx = gameState.stageIndex + 1;
+      const stateToPersist = { ...gameState, stageIndex: nextStageIdx };
+      try {
+        localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(stateToPersist));
+      } catch (e) {}
+
+      const skillDeltaFormatted = skillDelta >= 0 ? `+${skillDelta}` : `${skillDelta}`;
+      document.getElementById('pod-badge').textContent = playerObj.dnf ? 'ABANDONO' : `${playerPos}º LUGAR`;
+      document.getElementById('pod-title').textContent = won
+        ? '1º LUGAR - VITÓRIA!'
+        : playerObj.dnf
+        ? `FIM DE PROVA (${playerObj.dnfReason})`
+        : `${playerPos}º LUGAR NA ETAPA`;
+      document.getElementById('pod-subtitle').textContent = `Estado Mental / Habilidade agora: ${gameState.driverSkill}/100 (${skillDeltaFormatted})`;
+
+      document.getElementById('pod-finance-breakdown').innerHTML = `
+        <strong class="text-gold">PREMIAÇÃO &amp; PATROCÍNIOS</strong>
+        <div class="stat-row mt-1"><span>Prêmio por Posição (${playerObj.dnf ? 'DNF' : playerPos + 'º'}):</span><strong>${formatMoney(prize)}</strong></div>
+        <div class="stat-row"><span>Patrocinador Master (Corrida Concluída):</span><strong>${formatMoney(sponsorMaster)}</strong></div>
+        <div class="stat-row"><span>Bônus de Meta (Pódio sem quebras):</span><strong>${formatMoney(sponsorGoal)}</strong></div>
+        <div class="stat-row"><span>Total Recebido:</span><strong class="text-green">${formatMoney(totalEarned)}</strong></div>
+      `;
+
+      document.getElementById('pod-wear-summary').innerHTML = `
+        <strong class="text-sky">RESUMO MECÂNICO &amp; PNEUS PÓS-PROVA</strong>
+        <div class="mt-1" style="font-size:0.84rem; line-height:1.5;">
+          ${PART_CATEGORIES.map((p) => `${p.name}: <strong>${Math.round(gameState.partsHealth[p.id])}%</strong>`).join(' · ')}
+        </div>
+        ${recoveredTireNotice}
+      `;
+
+      document.getElementById('modal-backdrop').classList.remove('hidden');
+      document.getElementById('modal-podium').classList.remove('hidden');
+      document.getElementById('modal-options').classList.add('hidden');
+      document.getElementById('modal-credits').classList.add('hidden');
+      playBeep(won ? 980 : 420, 0.2);
+    }
+
+    function confirmPodiumAndReturnGarage() {
+      closeModal();
+      gameState.stageIndex += 1;
+      saveGameToStorage();
+      raceSession = null;
+      document.getElementById('nav-tab-race').classList.add('hidden');
+      updateTopHud();
+      switchMainTab('tab-garage');
+    }
+
+    // =====================================================================
+    // 10. RENDERIZAÇÃO DOS TRAÇADOS REAIS 16-BIT (SPLINE CATMULL-ROM)
+    // =====================================================================
+    function getClosedSplineSample(track) {
+      if (trackSplineCache[track.id]) return trackSplineCache[track.id];
+
+      const ctrl = track.layoutPoints || [
+        [0.5, 0.16], [0.15, 0.5], [0.5, 0.84], [0.85, 0.5]
+      ];
+      const n = ctrl.length;
+      const samplesPerSeg = 24;
+      const pts = [];
+
+      for (let i = 0; i < n; i++) {
+        const p0 = ctrl[(i - 1 + n) % n];
+        const p1 = ctrl[i];
+        const p2 = ctrl[(i + 1) % n];
+        const p3 = ctrl[(i + 2) % n];
+
+        for (let s = 0; s < samplesPerSeg; s++) {
+          const t = s / samplesPerSeg;
+          const t2 = t * t;
+          const t3 = t2 * t;
+
+          const x = 0.5 * (
+            (2 * p1[0]) +
+            (-p0[0] + p2[0]) * t +
+            (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 +
+            (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3
+          );
+          const y = 0.5 * (
+            (2 * p1[1]) +
+            (-p0[1] + p2[1]) * t +
+            (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 +
+            (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3
+          );
+          pts.push({ x, y });
+        }
+      }
+
+      const cumDist = [0];
+      let totalLen = 0;
+      for (let i = 1; i <= pts.length; i++) {
+        const prev = pts[i - 1];
+        const curr = pts[i % pts.length];
+        const segLen = Math.hypot(curr.x - prev.x, curr.y - prev.y);
+        totalLen += segLen;
+        cumDist.push(totalLen);
+      }
+
+      const data = { pts, cumDist, totalLen };
+      trackSplineCache[track.id] = data;
+      return data;
+    }
+
+    function getPointAtTrackProgress(spline, progress, W, H, laneOffset = 0) {
+      const p = ((progress % 1) + 1) % 1;
+      const targetDist = p * spline.totalLen;
+      const { pts, cumDist } = spline;
+
+      let idx = 0;
+      while (idx < pts.length - 1 && cumDist[idx + 1] < targetDist) {
+        idx++;
+      }
+
+      const d0 = cumDist[idx];
+      const d1 = cumDist[idx + 1];
+      const localT = d1 > d0 ? (targetDist - d0) / (d1 - d0) : 0;
+
+      const a = pts[idx];
+      const b = pts[(idx + 1) % pts.length];
+
+      const nx = (a.x + (b.x - a.x) * localT) * W;
+      const ny = (a.y + (b.y - a.y) * localT) * H;
+
+      const dx = (b.x - a.x) * W;
+      const dy = (b.y - a.y) * H;
+      const len = Math.hypot(dx, dy) || 1;
+      const perpX = -dy / len;
+      const perpY = dx / len;
+
+      return {
+        x: nx + perpX * laneOffset,
+        y: ny + perpY * laneOffset,
+        perpX,
+        perpY
+      };
+    }
+
+    function traceTrackPath(ctx, spline, W, H) {
+      const { pts } = spline;
+      ctx.beginPath();
+      pts.forEach((pt, i) => {
+        const px = pt.x * W;
+        const py = pt.y * H;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.closePath();
+    }
+
+    function renderTrackCircuitScene(canvas, track, weather, racers = [], isMiniPreview = false) {
+      if (!canvas || !track) return;
+      if (!isMiniPreview) {
+        const rect = canvas.getBoundingClientRect();
+        if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+          canvas.width = Math.max(320, Math.floor(rect.width));
+          canvas.height = 360;
+        }
+      }
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+      const spline = getClosedSplineSample(track);
+
+      ctx.fillStyle = weather === 'chuva' ? '#0f1f18' : '#14301c';
+      ctx.fillRect(0, 0, W, H);
+
+      const curbWidth = isMiniPreview ? 12 : 28;
+      const asphaltWidth = isMiniPreview ? 8 : 20;
+
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = curbWidth;
+      traceTrackPath(ctx, spline, W, H);
+      ctx.stroke();
+
+      ctx.setLineDash(isMiniPreview ? [6, 6] : [12, 12]);
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = curbWidth;
+      traceTrackPath(ctx, spline, W, H);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.strokeStyle = weather === 'chuva' ? '#1e293b' : '#334155';
+      ctx.lineWidth = asphaltWidth;
+      traceTrackPath(ctx, spline, W, H);
+      ctx.stroke();
+
+      const startPt = getPointAtTrackProgress(spline, 0, W, H, 0);
+      const halfLine = curbWidth * 0.52;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = isMiniPreview ? 2.5 : 4;
+      ctx.beginPath();
+      ctx.moveTo(startPt.x - startPt.perpX * halfLine, startPt.y - startPt.perpY * halfLine);
+      ctx.lineTo(startPt.x + startPt.perpX * halfLine, startPt.y + startPt.perpY * halfLine);
+      ctx.stroke();
+
+      const boxW = isMiniPreview ? 108 : 210;
+      const boxH = isMiniPreview ? 32 : 52;
+      const boxX = isMiniPreview ? 6 : 14;
+      const boxY = H - boxH - (isMiniPreview ? 6 : 14);
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.86)';
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = isMiniPreview ? 1.5 : 2;
+      ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = isMiniPreview ? 'bold 7px "Press Start 2P", monospace' : 'bold 11px "Press Start 2P", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(track.id.toUpperCase(), boxX + (isMiniPreview ? 6 : 10), boxY + (isMiniPreview ? 13 : 21));
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = isMiniPreview ? '9px Inter, sans-serif' : '12px Inter, sans-serif';
+      ctx.fillText(`${track.totalKm} km · ${weather.toUpperCase()}`, boxX + (isMiniPreview ? 6 : 10), boxY + (isMiniPreview ? 25 : 40));
+
+      racers.forEach((r, idx) => {
+        if (r.dnf) return;
+        const laneOffset = ((idx % 3) - 1) * 4.5;
+        const pos = getPointAtTrackProgress(spline, r.lapProgress, W, H, laneOffset);
+
+        ctx.fillStyle = r.color;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r.isPlayer ? 7.5 : 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (r.isPlayer) {
+          ctx.strokeStyle = '#fde047';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        }
+      });
+
+      if (weather === 'chuva') {
+        ctx.strokeStyle = 'rgba(147, 197, 253, 0.35)';
+        ctx.lineWidth = 1;
+        const drops = isMiniPreview ? 18 : 45;
+        for (let i = 0; i < drops; i++) {
+          const rxp = Math.random() * W;
+          const ryp = Math.random() * H;
+          ctx.beginPath();
+          ctx.moveTo(rxp, ryp);
+          ctx.lineTo(rxp - 4, ryp + 10);
+          ctx.stroke();
+        }
+      }
+    }
+
+    function drawRaceCanvas() {
+      const canvas = document.getElementById('race-canvas');
+      if (!canvas || !raceSession) return;
+      renderTrackCircuitScene(canvas, raceSession.track, raceSession.weather, raceSession.racers, false);
+    }
+
+    // =====================================================================
+    // 11. CAPA INICIAL: CARREGAMENTO AUTOMÁTICO DO VÍDEO + FALLBACK SANDBOX
+    // =====================================================================
+    let introRevealed = false;
+    let fallbackCoverAnimId = null;
+
+    function isSandboxedPreviewEnv() {
+      try {
+        const proto = window.location.protocol;
+        const host = window.location.hostname || '';
+        return (
+          proto === 'about:' ||
+          proto === 'blob:' ||
+          host.includes('googleusercontent') ||
+          host.includes('usercontent')
+        );
+      } catch (e) {
+        return true;
+      }
+    }
+
+    function revealTitleAndButtons() {
+      if (introRevealed) return;
+      introRevealed = true;
+      updateContinueButtonUI();
+      document.getElementById('title-logo-box').classList.add('intro-revealed');
+      document.getElementById('title-menu-stack').classList.add('intro-revealed');
+      const skipBtn = document.getElementById('btn-skip-intro');
+      if (skipBtn) skipBtn.classList.add('hidden');
+    }
+
+    function handleTitleScreenClick(event) {
+      if (!introRevealed) {
+        skipIntroToMenu();
+      }
+    }
+
+    function skipIntroToMenu() {
+      const video = document.getElementById('cover-video-player');
+      if (video && video.duration && isFinite(video.duration)) {
+        try {
+          video.currentTime = Math.max(0, video.duration - 0.05);
+          video.pause();
+        } catch (e) {}
+      }
+      revealTitleAndButtons();
+    }
+
+    function handleCoverUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const video = document.getElementById('cover-video-player');
+      const img = document.getElementById('cover-custom-img');
+      const canvas = document.getElementById('cover-canvas');
+
+      if (file.type.startsWith('video/')) {
+        if (fallbackCoverAnimId) {
+          cancelAnimationFrame(fallbackCoverAnimId);
+          fallbackCoverAnimId = null;
+        }
+        img.style.display = 'none';
+        canvas.style.display = 'none';
+        video.style.display = 'block';
+
+        introRevealed = false;
+        document.getElementById('title-logo-box').classList.remove('intro-revealed');
+        document.getElementById('title-menu-stack').classList.remove('intro-revealed');
+        document.getElementById('btn-skip-intro').classList.remove('hidden');
+
+        video.src = url;
+        video.currentTime = 0;
+        video.play().catch(() => revealTitleAndButtons());
+      } else {
+        video.pause();
+        video.style.display = 'none';
+        canvas.style.display = 'none';
+        img.src = url;
+        img.style.display = 'block';
+        revealTitleAndButtons();
+      }
+    }
+
+    function initCoverMedia() {
+      const video = document.getElementById('cover-video-player');
+      const canvas = document.getElementById('cover-canvas');
+
+      if (isSandboxedPreviewEnv()) {
+        video.style.display = 'none';
+        startFallbackNightCover(canvas);
+        setTimeout(revealTitleAndButtons, 900);
+        return;
+      }
+
+      video.addEventListener('loadeddata', () => {
+        canvas.style.display = 'none';
+        video.style.display = 'block';
+      });
+
+      video.addEventListener('ended', () => {
+        video.pause();
+        revealTitleAndButtons();
+      });
+
+      video.addEventListener('timeupdate', () => {
+        if (video.duration && isFinite(video.duration) && video.currentTime >= video.duration - 0.35) {
+          revealTitleAndButtons();
+        }
+      });
+
+      video.addEventListener('error', () => {
+        video.style.display = 'none';
+        startFallbackNightCover(canvas);
+        setTimeout(revealTitleAndButtons, 1400);
+      });
+
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {
+          video.style.display = 'none';
+          startFallbackNightCover(canvas);
+          setTimeout(revealTitleAndButtons, 1400);
+        });
+      }
+    }
+
+    function startFallbackNightCover(canvas) {
+      if (!canvas) return;
+      canvas.style.display = 'block';
+      if (fallbackCoverAnimId) return;
+      const ctx = canvas.getContext('2d');
+      let t = 0;
+
+      function drawFrame() {
+        const rect = canvas.getBoundingClientRect();
+        if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+          canvas.width = Math.max(320, Math.floor(rect.width));
+          canvas.height = Math.max(240, Math.floor(rect.height));
+        }
+        const W = canvas.width;
+        const H = canvas.height;
+        t += 0.02;
+
+        const sky = ctx.createLinearGradient(0, 0, 0, H * 0.65);
+        sky.addColorStop(0, '#070b19');
+        sky.addColorStop(1, '#16213e');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = '#e2e8f0';
+        for (let i = 0; i < 40; i++) {
+          const sx = ((i * 197) % W);
+          const sy = ((i * 89) % (H * 0.4));
+          ctx.fillRect(sx, sy, 2, 2);
+        }
+
+        ctx.fillStyle = '#0f172a';
+        const bCount = 18;
+        const bw = W / bCount;
+        for (let i = 0; i < bCount; i++) {
+          const bh = 60 + ((i * 47) % 110);
+          ctx.fillRect(i * bw, H * 0.62 - bh, bw - 3, bh);
+        }
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(W * 0.35, H * 0.62);
+        ctx.lineTo(W * 0.65, H * 0.62);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#fbbf24';
+        const stripeOffset = (t * 80) % 40;
+        for (let y = H * 0.64 + stripeOffset; y < H; y += 40) {
+          ctx.fillRect(W * 0.5 - 3, y, 6, 18);
+        }
+
+        fallbackCoverAnimId = requestAnimationFrame(drawFrame);
+      }
+
+      drawFrame();
+    }
+
+    // =====================================================================
+    // 12. CALCULADORA TÁTICA RETRÁTIL (LÓGICA ARITMÉTICA + TECLADO)
+    // =====================================================================
+    let calcCurrent = '0';
+    let calcPrevious = null;
+    let calcOp = null;
+    let calcResetNext = false;
+
+    function toggleGlobalCalculator() {
+      const panel = document.getElementById('global-calc-panel');
+      const btn = document.getElementById('btn-toggle-calc');
+      const isHidden = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !isHidden);
+      btn.innerHTML = isHidden ? '🧮 Fechar Calc.' : '🧮 Calculadora';
+      playBeep(isHidden ? 680 : 480, 0.05);
+    }
+
+    function updateCalcDisplay() {
+      const mainEl = document.getElementById('calc-main-line');
+      const exprEl = document.getElementById('calc-expr-line');
+      if (!mainEl || !exprEl) return;
+
+      mainEl.textContent = calcCurrent;
+      const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+      if (calcPrevious !== null && calcOp) {
+        exprEl.textContent = `${calcPrevious} ${opSymbols[calcOp] || calcOp}`;
+      } else {
+        exprEl.textContent = '';
+      }
+    }
+
+    function calcDigit(d) {
+      if (calcCurrent === 'Erro') calcCurrent = '0';
+      if (calcResetNext) {
+        calcCurrent = d;
+        calcResetNext = false;
+      } else {
+        calcCurrent = calcCurrent === '0' ? d : calcCurrent.length < 14 ? calcCurrent + d : calcCurrent;
+      }
+      updateCalcDisplay();
+    }
+
+    function calcDecimal() {
+      if (calcCurrent === 'Erro') calcCurrent = '0';
+      if (calcResetNext) {
+        calcCurrent = '0.';
+        calcResetNext = false;
+      } else if (!calcCurrent.includes('.')) {
+        calcCurrent += '.';
+      }
+      updateCalcDisplay();
+    }
+
+    function calcClear() {
+      calcCurrent = '0';
+      calcPrevious = null;
+      calcOp = null;
+      calcResetNext = false;
+      updateCalcDisplay();
+    }
+
+    function calcBackspace() {
+      if (calcResetNext || calcCurrent === 'Erro') {
+        calcCurrent = '0';
+        calcResetNext = false;
+      } else {
+        calcCurrent = calcCurrent.length > 1 ? calcCurrent.slice(0, -1) : '0';
+      }
+      updateCalcDisplay();
+    }
+
+    function computeCalcResult(a, b, op) {
+      if (op === '+') return a + b;
+      if (op === '-') return a - b;
+      if (op === '*') return a * b;
+      if (op === '/') return b === 0 ? 'Erro' : a / b;
+      return b;
+    }
+
+    function calcOperator(nextOp) {
+      if (calcCurrent === 'Erro') {
+        calcClear();
+        return;
+      }
+      const inputVal = parseFloat(calcCurrent);
+      if (calcPrevious === null) {
+        calcPrevious = inputVal;
+      } else if (calcOp && !calcResetNext) {
+        const res = computeCalcResult(calcPrevious, inputVal, calcOp);
+        if (res === 'Erro' || !isFinite(res)) {
+          calcCurrent = 'Erro';
+          calcPrevious = null;
+          calcOp = null;
+          calcResetNext = true;
+          updateCalcDisplay();
+          return;
+        }
+        const rounded = Math.round(res * 1000000) / 1000000;
+        calcCurrent = String(rounded);
+        calcPrevious = rounded;
+      }
+      calcOp = nextOp;
+      calcResetNext = true;
+      updateCalcDisplay();
+    }
+
+    function calcEquals() {
+      if (calcOp === null || calcPrevious === null) return;
+      const inputVal = parseFloat(calcCurrent);
+      const res = computeCalcResult(calcPrevious, inputVal, calcOp);
+      const exprEl = document.getElementById('calc-expr-line');
+      const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+      if (exprEl) {
+        exprEl.textContent = `${calcPrevious} ${opSymbols[calcOp] || calcOp} ${inputVal} =`;
+      }
+      if (res === 'Erro' || !isFinite(res)) {
+        calcCurrent = 'Erro';
+      } else {
+        const rounded = Math.round(res * 1000000) / 1000000;
+        calcCurrent = String(rounded);
+      }
+      calcPrevious = null;
+      calcOp = null;
+      calcResetNext = true;
+      const mainEl = document.getElementById('calc-main-line');
+      if (mainEl) mainEl.textContent = calcCurrent;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const panel = document.getElementById('global-calc-panel');
+      if (!panel || panel.classList.contains('hidden')) return;
+
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        calcDigit(e.key);
+      } else if (e.key === '.' || e.key === ',') {
+        e.preventDefault();
+        calcDecimal();
+      } else if (['+', '-', '*', '/'].includes(e.key)) {
+        e.preventDefault();
+        calcOperator(e.key);
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        calcEquals();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        calcBackspace();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        toggleGlobalCalculator();
+      }
+    });
+
+    window.onload = function () {
+      updateContinueButtonUI();
+      initCoverMedia();
+    };
+  </script>
+</body>
+</html>
